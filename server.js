@@ -11,6 +11,7 @@ app.use("/mains", require("./routes/main"));
 app.use("/users", require("./routes/users")); //done
 app.use("/feedbacks", require("./routes/feedback"));
 app.use("/searchs", require("./routes/searchs"));
+app.use("/bots",require("./routes/gemini"));
 
 app.listen(process.env.PORT, async () => {
   await db();
