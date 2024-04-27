@@ -1,48 +1,49 @@
 const mongoose = require("mongoose");
+
 const mainSchema = new mongoose.Schema({
   title: {
     type: String,
-    min: 5,
+    required: true,
+    minlength: 5,
     trim: true,
-    max: 20,
+    maxlength: 20,
   },
   description: {
     type: String,
-    min: 5,
+    required: true,
+    minlength: 5,
     trim: true,
-    max: 20,
+    maxlength: 20,
   },
-  video: {
+  videoUrl: {
     type: String,
-    min: 5,
-    trim: true,
-    max: 20,
-  },
-  timestamps: {
-    type: [String],
-    default: [],
+    required: true,
   },
   link: {
     type: String,
-    min: 5,
+    required: true,
+    minlength: 5,
     trim: true,
-    max: 20,
+    maxlength: 20,
   },
   category: {
     type: String,
     default: "all",
-    min: 5,
+    required: true,
+    minlength: 5,
     trim: true,
-    max: 20,
+    maxlength: 20,
   },
   commission: {
     type: String,
     default: "default",
-    min: 5,
+    required: true,
+    minlength: 5,
     trim: true,
-    max: 20,
+    maxlength: 20,
   },
 });
 
 const mainModel = mongoose.model("mains", mainSchema);
+
 module.exports = mainModel;

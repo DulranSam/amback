@@ -1,4 +1,5 @@
 const mongoose = require("mongoose");
+
 const feedbackSchema = new mongoose.Schema(
   {
     userFeedback: {
@@ -11,4 +12,5 @@ const feedbackSchema = new mongoose.Schema(
 );
 
 const feedbackModel = mongoose.model("feedbacks", feedbackSchema);
+
 module.exports = feedbackModel;

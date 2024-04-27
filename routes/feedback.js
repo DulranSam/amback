@@ -3,11 +3,11 @@ const Router = express.Router();
 const feedbackModel = require("../models/feedbackModel");
 
 Router.route("/").post(async (req, res) => {
-  const { feedback } = req?.body;
+  const { feedback } = req.body;
   if (!feedback) return res.status(400).json({ Alert: "Feedback REQUIRED" });
 
   try {
-    const newFeedback = await feedbackModel.create(req.body);
+    const newFeedback = await feedbackModel.create({ userFeedback: feedback });
 
     return res.status(201).json({ Alert: `${feedback} Added` });
   } catch (err) {

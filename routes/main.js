@@ -2,7 +2,6 @@ const express = require("express");
 const Router = express.Router();
 const mainModel = require("../models/mainModel");
 const multer = require("multer");
-// const { CloudinaryStorage } = require("multer-storage-cloudinary");
 const cloudinary = require("cloudinary").v2;
 require("dotenv").config();
 
@@ -12,31 +11,23 @@ cloudinary.config({
   api_secret: process.env.cloudinaryapisecret,
 });
 
-// const storage = new CloudinaryStorage({
-//   cloudinary: cloudinary,
-//   params: {
-//     folder: 'your_folder_name', // optional, destination folder in the Cloudinary account
-//     allowed_formats: ['mp4', 'avi'], // allowed formats for video uploads
-//     resource_type: 'video' // type of resource to upload (image, video, raw)
-//   }
-// });
-// const upload = multer({ storage: storage });
+const storage = multer.diskStorage({});
+const upload = multer({ storage });
 
 Router.route("/")
-  .post(async (req, res) => {
+  .post(upload.single("video"), async (req, res) => {
     const { title, description, link, category, commission } = req.body;
-    const { file: video } = req;
-    console.log(req.body);
+    const videoUrl = req.file.path;
 
     if (!title || !description || !link || !category || !commission)
       return res.status(400).json({ Alert: "Required fields not filled" });
 
     try {
       // Upload video to Cloudinary
-      const result = await cloudinary.uploader.upload(video.path, {
+      const result = await cloudinary.uploader.upload(videoUrl, {
         resource_type: "video",
       });
-      const videoUrl = result.secure_url;
+      const videoUrlCloud = result.secure_url;
 
       // Create the document in the database
       await mainModel.create({
@@ -44,7 +35,7 @@ Router.route("/")
         description,
         link,
         category,
-        videoUrl,
+        videoUrl: videoUrlCloud,
         commission,
       });
       return res.status(201).json({ Alert: "Created" });
