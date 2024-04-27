@@ -7,9 +7,9 @@ const cloudinary = require("cloudinary").v2;
 require("dotenv").config();
 
 cloudinary.config({
-  cloud_name: "dsto9mmt0",
-  api_key: "857482966483428",
-  api_secret: "Vry5wv5flNncSsA3t6km4SQcGnM",
+  cloud_name: process.env.cloudinarycloudname,
+  api_key: process.env.cloudinaryapikey,
+  api_secret: process.env.cloudinaryapisecret,
 });
 
 // const storage = new CloudinaryStorage({
@@ -24,7 +24,6 @@ cloudinary.config({
 
 Router.route("/")
   .post(async (req, res) => {
-    // Check if required fields are provided
     const { title, description, link, category, commission } = req.body;
     const { file: video } = req;
     console.log(req.body);
@@ -34,11 +33,20 @@ Router.route("/")
 
     try {
       // Upload video to Cloudinary
-      const result = await cloudinary.uploader.upload(video.path, { resource_type: 'video' });
+      const result = await cloudinary.uploader.upload(video.path, {
+        resource_type: "video",
+      });
       const videoUrl = result.secure_url;
 
       // Create the document in the database
-      await mainModel.create({ title, description, link, category, videoUrl, commission });
+      await mainModel.create({
+        title,
+        description,
+        link,
+        category,
+        videoUrl,
+        commission,
+      });
       return res.status(201).json({ Alert: "Created" });
     } catch (err) {
       console.error(err);
@@ -47,7 +55,7 @@ Router.route("/")
   })
   .get(async (req, res) => {
     const selectedType = req?.params?.type;
-    if (!selectedType || selectedType==="all") {
+    if (!selectedType || selectedType === "all") {
       try {
         const data = await mainModel.find();
         if (data && data.length) {
@@ -61,7 +69,9 @@ Router.route("/")
       }
     } else {
       try {
-        const data = await mainModel.aggregate([{ $match: { category: selectedType } }]);
+        const data = await mainModel.aggregate([
+          { $match: { category: selectedType } },
+        ]);
         if (data && data.length) {
           return res.status(200).json(data);
         } else {
@@ -73,7 +83,5 @@ Router.route("/")
       }
     }
   });
-  
-  
 
 module.exports = Router;
