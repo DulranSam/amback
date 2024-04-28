@@ -17,10 +17,11 @@ const upload = multer({ storage });
 Router.route("/")
   .post(upload.single("video"), async (req, res) => {
     const { title, description, link, category, commission } = req.body;
-    const videoUrl = req.file.path;
+    const videoUrl = req.file ? req.file.path : null;
 
-    if (!title || !description || !link || !category || !commission)
+    if (!title || !description || !link || !category || !commission || !videoUrl) {
       return res.status(400).json({ Alert: "Required fields not filled" });
+    }
 
     try {
       // Upload video to Cloudinary
@@ -41,37 +42,28 @@ Router.route("/")
       return res.status(201).json({ Alert: "Created" });
     } catch (err) {
       console.error(err);
-      return res.status(500).json({ Error: err.message });
+      return res.status(500).json({ Error: "Failed to upload video" });
     }
   })
   .get(async (req, res) => {
-    const selectedType = req?.params?.type;
-    if (!selectedType || selectedType === "all") {
-      try {
-        const data = await mainModel.find();
-        if (data && data.length) {
-          return res.status(200).json(data);
-        } else {
-          return res.status(404).json({ Alert: "No results found" });
-        }
-      } catch (err) {
-        console.error(err);
-        return res.status(500).json({ Error: err });
+    const selectedType = req.query.type || "all";
+
+    try {
+      let data;
+      if (selectedType === "all") {
+        data = await mainModel.find();
+      } else {
+        data = await mainModel.find({ category: selectedType });
       }
-    } else {
-      try {
-        const data = await mainModel.aggregate([
-          { $match: { category: selectedType } },
-        ]);
-        if (data && data.length) {
-          return res.status(200).json(data);
-        } else {
-          return res.status(404).json({ Alert: "No results found" });
-        }
-      } catch (err) {
-        console.error(err);
-        return res.status(500).json({ Error: err });
+
+      if (data.length) {
+        return res.status(200).json(data);
+      } else {
+        return res.status(404).json({ Alert: "No results found" });
       }
+    } catch (err) {
+      console.error(err);
+      return res.status(500).json({ Error: "Internal server error" });
     }
   });
 

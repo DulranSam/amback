@@ -1,25 +1,54 @@
 const express = require("express");
 const Router = express.Router();
 const userModel = require("../models/userModel");
-require('dotenv').config();
 const bcrypt = require("bcrypt");
-const jwt = require('jsonwebtoken');
+const jwt = require("jsonwebtoken");
+const nodemailer = require("nodemailer");
+require("dotenv").config();
+
 const JWT_SECRET = process.env.jwtsupersecret;
+const EMAIL_USER = process.env.personalMail;
+const EMAIL_PASS = process.env.EMAIL_PASS;
+
+const transporter = nodemailer.createTransport({
+  service: "gmail",
+  auth: {
+    user: EMAIL_USER,
+    pass: EMAIL_PASS,
+  },
+});
 
 Router.route("/register").post(async (req, res) => {
-  const { gmail} = req?.body;
-  if (!gmail )
-    return res.status(400).json({ Alert: "Gmail Required" });
+  const { gmail, password } = req.body;
+  if (!gmail || !password)
+    return res.status(400).json({ Alert: "Gmail and password required" });
 
   try {
     const userExists = await userModel.findOne({ gmail });
-    if (!userExists) {
- 
-      const newUser = await userModel.create({ gmail, password: hashedPassword });
-      return res.status(201).json({ Alert: `${gmail} added` });
-    } else {
-      return res.status(409).json({ Alert: "Conflict" });
+    if (userExists) {
+      return res.status(409).json({ Alert: "User already exists" });
     }
+
+    const hashedPassword = await bcrypt.hash(password, 10);
+    const newUser = await userModel.create({ gmail, password: hashedPassword });
+
+    // Send email to the newly registered user
+    const mailOptions = {
+      from: "teamveloxal@gmail.com",
+      to: newUser.gmail,
+      subject: "Welcome to Affiliates!",
+      text: `Welcome to Affiliates!\n\nYour login credentials are:\n\nGmail: ${newUser.gmail}\nPassword: ${password}\n\nWe hope to help your company leverage your potential with our service!\n\nBest Regards,\nTeam Velo!`,
+    };
+
+    transporter.sendMail(mailOptions, function (error, info) {
+      if (error) {
+        console.error(error);
+      } else {
+        console.log("Email sent: " + info.response);
+      }
+    });
+
+    return res.status(201).json({ Alert: `${gmail} added` });
   } catch (err) {
     console.error(err);
     return res.status(500).json({ Alert: err.message });
@@ -27,7 +56,7 @@ Router.route("/register").post(async (req, res) => {
 });
 
 Router.route("/login").post(async (req, res) => {
-  const { gmail, password } = req?.body;
+  const { gmail, password } = req.body;
   if (!gmail || !password)
     return res.status(400).json({ Alert: "Gmail and password required" });
 
@@ -37,14 +66,38 @@ Router.route("/login").post(async (req, res) => {
       return res.status(404).json({ Alert: "User not found" });
     }
 
-
-
-    if (user.password === password) {
-      const token = jwt.sign({ userId: user._id }, JWT_SECRET, { expiresIn: '1h' }); // Expires in 1 hour
-
+    const passwordMatch = await bcrypt.compare(password, user.password);
+    if (passwordMatch) {
+      const token = jwt.sign({ userId: user._id }, JWT_SECRET, {
+        expiresIn: "1h",
+      }); // Expires in 1 hour
       return res.status(200).json({ token, user });
     } else {
       return res.status(401).json({ Alert: "Wrong password" });
+    }
+  } catch (err) {
+    console.error(err);
+    return res.status(500).json({ Alert: err.message });
+  }
+});
+
+Router.route("/forgot/:id").put(async (req, res) => {
+  const id = req.params.id;
+  const { password } = req.body;
+
+  if (!id) return res.status(400).json({ Alert: "ID Required" });
+
+  try {
+    const validUser = await userModel.findById(id);
+
+    if (!validUser) {
+      return res
+        .status(404)
+        .json({ Alert: "No user found with the provided ID" });
+    } else {
+      await userModel.findByIdAndUpdate(id, { password });
+
+      return res.status(200).json({ Alert: "Password updated successfully" });
     }
   } catch (err) {
     console.error(err);
