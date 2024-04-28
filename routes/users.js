@@ -7,14 +7,14 @@ const jwt = require('jsonwebtoken');
 const JWT_SECRET = process.env.jwtsupersecret;
 
 Router.route("/register").post(async (req, res) => {
-  const { gmail, password } = req?.body;
-  if (!gmail || !password)
-    return res.status(400).json({ Alert: "Gmail and password required" });
+  const { gmail} = req?.body;
+  if (!gmail )
+    return res.status(400).json({ Alert: "Gmail Required" });
 
   try {
     const userExists = await userModel.findOne({ gmail });
     if (!userExists) {
-      const hashedPassword = await bcrypt.hash(password, 10); // Hash the password
+ 
       const newUser = await userModel.create({ gmail, password: hashedPassword });
       return res.status(201).json({ Alert: `${gmail} added` });
     } else {
@@ -34,13 +34,12 @@ Router.route("/login").post(async (req, res) => {
   try {
     const user = await userModel.findOne({ gmail });
     if (!user) {
-      return res.status(401).json({ Alert: "User not found" });
+      return res.status(404).json({ Alert: "User not found" });
     }
 
-    // Compare the passwords securely using bcrypt
-    const passwordMatch = await bcrypt.compare(password, user.password);
-    if (passwordMatch) {
-      // Generate JWT
+
+
+    if (user.password === password) {
       const token = jwt.sign({ userId: user._id }, JWT_SECRET, { expiresIn: '1h' }); // Expires in 1 hour
 
       return res.status(200).json({ token, user });
