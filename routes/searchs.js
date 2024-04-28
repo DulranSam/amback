@@ -2,7 +2,7 @@ const express = require("express");
 const Router = express.Router();
 const mainModel = require("../models/mainModel");
 
-Router.route("/").post(async (req, res) => {
+Router.route("/").post(async (req, res) => { 
   const { search } = req.body;
   if (!search) return res.status(400).json({ error: "Search criteria required" });
 

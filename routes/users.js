@@ -34,7 +34,7 @@ Router.route("/register").post(async (req, res) => {
 
     // Send email to the newly registered user
     const mailOptions = {
-      from: "teamveloxal@gmail.com",
+      from: process.env.personalMail,
       to: newUser.gmail,
       subject: "Welcome to Affiliates!",
       text: `Welcome to Affiliates!\n\nYour login credentials are:\n\nGmail: ${newUser.gmail}\nPassword: ${password}\n\nWe hope to help your company leverage your potential with our service!\n\nBest Regards,\nTeam Velo!`,
@@ -83,6 +83,7 @@ Router.route("/login").post(async (req, res) => {
 
 Router.route("/forgot/:id").put(async (req, res) => {
   const id = req.params.id;
+  if(!id) return res.status(400).json({Alert:"ID required"})
   const { password } = req.body;
 
   if (!id) return res.status(400).json({ Alert: "ID Required" });

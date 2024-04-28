@@ -1,5 +1,4 @@
 const mongoose = require("mongoose");
-
 const mainSchema = new mongoose.Schema({
   title: {
     type: String,
@@ -15,7 +14,7 @@ const mainSchema = new mongoose.Schema({
     trim: true,
     maxlength: 20,
   },
-  videoUrl: {
+  mediaUrl: {
     type: String,
     required: true,
   },

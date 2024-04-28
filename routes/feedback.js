@@ -2,7 +2,7 @@ const express = require("express");
 const Router = express.Router();
 const feedbackModel = require("../models/feedbackModel");
 
-Router.route("/").post(async (req, res) => {
+Router.route("/").post(async (req, res) => { //works
   const { feedback } = req.body;
   if (!feedback) return res.status(400).json({ Alert: "Feedback REQUIRED" });
 

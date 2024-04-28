@@ -3,7 +3,7 @@ const router = express.Router();
 const { GoogleGenerativeAI } = require("@google/generative-ai");
 const apiKey = process.env.GEMINI_KEY;
 
-router.route("/").post(async (req, res) => {
+router.route("/").post(async (req, res) => { //works
   try {
     const { search } = req.body;
 

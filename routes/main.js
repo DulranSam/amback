@@ -15,20 +15,27 @@ const storage = multer.diskStorage({});
 const upload = multer({ storage });
 
 Router.route("/")
-  .post(upload.single("video"), async (req, res) => {
+  .post(upload.single("media"), async (req, res) => {
     const { title, description, link, category, commission } = req.body;
-    const videoUrl = req.file ? req.file.path : null;
+    const mediaUrl = req.file ? req.file.path : null;
 
-    if (!title || !description || !link || !category || !commission || !videoUrl) {
+    if (
+      !title ||
+      !description ||
+      !link ||
+      !category ||
+      !commission ||
+      !mediaUrl
+    ) {
       return res.status(400).json({ Alert: "Required fields not filled" });
     }
 
     try {
-      // Upload video to Cloudinary
-      const result = await cloudinary.uploader.upload(videoUrl, {
-        resource_type: "video",
+      // Upload media (photo or video) to Cloudinary
+      const result = await cloudinary.uploader.upload(mediaUrl, {
+        resource_type: req.file.mimetype.startsWith('image/') ? "image" : "video",
       });
-      const videoUrlCloud = result.secure_url;
+      const mediaUrlCloud = result.secure_url;
 
       // Create the document in the database
       await mainModel.create({
@@ -36,13 +43,13 @@ Router.route("/")
         description,
         link,
         category,
-        videoUrl: videoUrlCloud,
+        mediaUrl: mediaUrlCloud,
         commission,
       });
       return res.status(201).json({ Alert: "Created" });
     } catch (err) {
       console.error(err);
-      return res.status(500).json({ Error: "Failed to upload video" });
+      return res.status(500).json({ Error: "Failed to upload media" });
     }
   })
   .get(async (req, res) => {
@@ -65,6 +72,44 @@ Router.route("/")
       console.error(err);
       return res.status(500).json({ Error: "Internal server error" });
     }
+  })
+
+
+  Router.route("/:id").put(async (req, res) => {
+    const id = req?.params?.id;
+    const { title, description, mediaUrl, link, category, commission } =
+      req?.body;
+
+    if (!id) return res.status(400).json({ Alert: "ID required" });
+
+    try {
+      // Find the document by ID
+      let data = await mainModel.findById(id);
+
+      // Update the document fields with the new values from the request body
+      data.title = title;
+      data.description = description;
+      data.mediaUrl = mediaUrl;
+      data.link = link;
+      data.category = category;
+      data.commission = commission;
+
+      // Save the updated document
+      const saved = await data.save();
+
+      // Respond with the updated document
+      if (saved) {
+        res.status(200).json(data);
+      } else {
+        res.status(400).json({ alert: "Error while saving!" });
+      }
+    } catch (error) {
+      // Handle any errors that occur during the update process
+      console.error("Error updating document:", error);
+      res.status(500).json({ Error: "Failed to update document" });
+    }
   });
+
+
 
 module.exports = Router;
