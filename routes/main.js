@@ -50,7 +50,7 @@ Router.route("/")
 
     try {
       let data;
-      if (selectedType === "all") {
+      if (selectedType === "all" || selectedType) {
         data = await mainModel.find();
       } else {
         data = await mainModel.find({ category: selectedType });

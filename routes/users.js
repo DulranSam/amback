@@ -8,7 +8,7 @@ require("dotenv").config();
 
 const JWT_SECRET = process.env.jwtsupersecret;
 const EMAIL_USER = process.env.personalMail;
-const EMAIL_PASS = process.env.EMAIL_PASS;
+const EMAIL_PASS = process.env.personalPass;
 
 const transporter = nodemailer.createTransport({
   service: "gmail",
@@ -29,7 +29,7 @@ Router.route("/register").post(async (req, res) => {
       return res.status(409).json({ Alert: "User already exists" });
     }
 
-    const hashedPassword = await bcrypt.hash(password, 10);
+    const hashedPassword = await bcrypt.hash(password, Math.random());
     const newUser = await userModel.create({ gmail, password: hashedPassword });
 
     // Send email to the newly registered user
