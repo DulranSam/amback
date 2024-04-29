@@ -3,52 +3,27 @@ const Router = express.Router();
 const userModel = require("../models/userModel");
 const bcrypt = require("bcrypt");
 const jwt = require("jsonwebtoken");
-const nodemailer = require("nodemailer");
 require("dotenv").config();
 
 const JWT_SECRET = process.env.JWT_SECRET;
-const EMAIL_USER = process.env.EMAIL_USER;
-const EMAIL_PASS = process.env.EMAIL_PASS;
 
-const transporter = nodemailer.createTransport({
-  service: "gmail",
-  auth: {
-    user: EMAIL_USER,
-    pass: EMAIL_PASS,
-  },
-});
 
 Router.route("/register").post(async (req, res) => {
-  const { email, password } = req.body;
-  if (!email || !password)
-    return res.status(400).json({ Alert: "Email and password required" });
+  const { username, password } = req.body;
+  if (!username || !password)
+    return res.status(400).json({ Alert: "username and password required" });
 
   try {
-    const userExists = await userModel.findOne({ email });
+    const userExists = await userModel.findOne({ username });
     if (userExists) {
       return res.status(409).json({ Alert: "User already exists" });
     }
 
     const hashedPassword = await bcrypt.hash(password, 10); // 10 is the number of salt rounds
-    const newUser = await userModel.create({ email, password: hashedPassword });
+    const newUser = await userModel.create({ username, password: hashedPassword });
 
-    // Send email to the newly registered user
-    const mailOptions = {
-      from: process.env.EMAIL_USER,
-      to: newUser.email,
-      subject: "Welcome to Affiliates!",
-      text: `Welcome to Affiliates!\n\nYour login credentials are:\n\nEmail: ${newUser?.email}\n\nWe hope to help your company leverage your potential with our service!\n\nBest Regards,\nTeam Velo!`,
-    };
-
-    transporter.sendMail(mailOptions, function (error, info) {
-      if (error) {
-        console.error(error);
-        return res.status(500).json({ Alert: "Error sending email" });
-      } else {
-        console.log("Email sent: " + info.response);
-        return res.status(201).json({ Alert: `${email} added` });
-      }
-    });
+    return res.status(201).json({Alert:`${newUser} created`})
+   
   } catch (err) {
     console.error(err);
     return res.status(500).json({ Alert: err.message });
@@ -56,12 +31,12 @@ Router.route("/register").post(async (req, res) => {
 });
 
 Router.route("/login").post(async (req, res) => {
-  const { email, password } = req.body;
-  if (!email || !password)
-    return res.status(400).json({ Alert: "Email and password required" });
+  const { username, password } = req.body;
+  if (!username || !password)
+    return res.status(400).json({ Alert: "username and password required" });
 
   try {
-    const user = await userModel.findOne({ email });
+    const user = await userModel.findOne({ username });
     if (!user) {
       return res.status(404).json({ Alert: "User not found" });
     }

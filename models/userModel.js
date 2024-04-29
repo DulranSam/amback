@@ -2,8 +2,8 @@ const mongoose = require("mongoose");
 
 const userSchema = new mongoose.Schema(
   {
-    gmail: {
-      default: "example@gmail.com",
+    username: {
+      default: "guest",
       trim: true,
       type: String,
     },

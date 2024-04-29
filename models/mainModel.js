@@ -1,41 +1,35 @@
 const mongoose = require("mongoose");
+
 const mainSchema = new mongoose.Schema({
   title: {
     type: String,
     required: true,
     minlength: 5,
     trim: true,
-    maxlength: 20,
+    maxlength: 50, // Increased maxlength for title
   },
   description: {
     type: String,
     required: true,
     minlength: 5,
     trim: true,
-    maxlength: 20,
+    maxlength: 200, // Increased maxlength for description
   },
-  mediaUrl: {
+  photo: {
     type: String,
     required: true,
   },
-  link: {
-    type: String,
-    required: true,
-    minlength: 5,
-    trim: true,
-    maxlength: 20,
-  },
+  links: [
+    {
+      type: String,
+      minlength: 5,
+      trim: true,
+      maxlength: 200, // Increased maxlength for links
+    }
+  ],
   category: {
     type: String,
     default: "all",
-    required: true,
-    minlength: 5,
-    trim: true,
-    maxlength: 20,
-  },
-  commission: {
-    type: String,
-    default: "default",
     required: true,
     minlength: 5,
     trim: true,
