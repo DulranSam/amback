@@ -41,6 +41,10 @@ const mainSchema = new mongoose.Schema({
     trim: true,
     maxlength: 20,
   },
+  user: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: "users",
+  },
 });
 
 const mainModel = mongoose.model("mains", mainSchema);

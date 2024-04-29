@@ -32,12 +32,22 @@ Router.route("/")
     }
 
     try {
+      // Decode the token to get user ID
+      const token = req.headers.authorization.split(" ")[1];
+      const decodedToken = jwt.verify(token, process.env.JWT_SECRET); // Use JWT_SECRET from process.env
+      const userId = decodedToken.userId;
+
+      // Find the user by ID
+      const userObject = await userModel.findById(userId);
+
       // Upload media (photo or video) to Cloudinary
-      const result = await cloudinary.uploader
-        .upload_stream({ resource_type: "auto" }, async (error, result) => {
+      const result = await cloudinary.uploader.upload_stream(
+        { resource_type: "auto" },
+        async (error, result) => {
           if (error) throw error;
 
           const mediaUrlCloud = result.secure_url;
+
           // Create the document in the database
           await mainModel.create({
             title,
@@ -46,10 +56,12 @@ Router.route("/")
             category,
             mediaUrl: mediaUrlCloud,
             commission,
+            user: userId, // Associate the listing with the user ID
           });
+
           return res.status(201).json({ Alert: "Created" });
-        })
-        .end(mediaBuffer);
+        }
+      ).end(mediaBuffer);
     } catch (err) {
       console.error(err);
       return res.status(500).json({ Error: "Failed to upload media" });
@@ -108,7 +120,7 @@ Router.route("/:id")
       let data = await mainModel.findById(id);
 
       // Check if the user who added the item is trying to edit it
-      if (data.userId !== userId) {
+      if (data?.userId !== userId) {
         // Assuming data.userId holds the user ID who added the item
         return res.status(401).json({
           Alert: "Unauthorized. You are not allowed to modify this item.",
