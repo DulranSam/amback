@@ -21,7 +21,7 @@ router.route("/").post(async (req, res) => {
       .replace(/\n/g, '<br>') // Line breaks
       .replace(/[^\w\s<>/.\-?!,"']+$/g, ''); // Remove unwanted characters
 
-    return res.status(200).send(formattedResponse);
+    return res.status(200).json(formattedResponse);
   } catch (err) {
     console.error(err);
     return res.status(500).json({ Alert: `Something went wrong ${err.status}` });
