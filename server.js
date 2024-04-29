@@ -7,11 +7,11 @@ const db = require("./database/db");
 app.use(express.json());
 app.use(cors({ origin: "*" }));
 
-app.use("/mains", require("./routes/main"));
+app.use("/mains", require("./routes/main")); //bugs
 app.use("/users", require("./routes/users")); //done
-app.use("/feedbacks", require("./routes/feedback"));
-app.use("/searchs", require("./routes/searchs"));
-app.use("/bots",require("./routes/gemini"));
+app.use("/feedbacks", require("./routes/feedback")); //done
+app.use("/searchs", require("./routes/searchs")); //bugs
+app.use("/bots",require("./routes/gemini")); //works
 
 app.listen(process.env.PORT, async () => {
   await db();

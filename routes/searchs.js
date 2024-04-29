@@ -12,9 +12,13 @@ Router.route("/").post(async (req, res) => {
     // Loop through each key-value pair in the search criteria
     Object.entries(search).forEach(([key, value]) => {
       // Add $match stage for each key-value pair
-      const matchStage = { $match: { [key]: value } };
+      // Use regex for partial matches and case-insensitive search
+      const matchStage = { $match: { [key]: { $regex: new RegExp(value, "i") } } };
       pipeline.push(matchStage);
     });
+
+    // Log the constructed pipeline for debugging
+    console.log("Constructed Pipeline:", JSON.stringify(pipeline));
 
     // Run the aggregation pipeline
     const data = await mainModel.aggregate(pipeline);
