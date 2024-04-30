@@ -37,9 +37,9 @@ Router.route("/")
 
     try {
       // Decode the token to get user ID
-      const token = req.headers.authorization.split(" ")[1];
-      const decodedToken = jwt.verify(token, process.env.JWT_SECRET); // Use JWT_SECRET from process.env
-      const userId = decodedToken.userId;
+      // const token = req.headers.authorization.split(" ")[1];
+      // const decodedToken = jwt.verify(token, process.env.JWT_SECRET); // Use JWT_SECRET from process.env
+      // const userId = decodedToken.userId;
 
       // Upload media (photo or video) to Cloudinary
       const result = await cloudinary.uploader.upload_stream(
@@ -58,7 +58,7 @@ Router.route("/")
             mediaUrl: mediaUrlCloud,
             mediaType, // Include media type in the document
             commission,
-            user: userId, // Associate the listing with the user ID
+            // user: userId, // Associate the listing with the user ID
           });
 
           return res.status(201).json({ Alert: "Created" });
