@@ -33,23 +33,24 @@ Router.route("/register").post(async (req, res) => {
     const hashedPassword = await bcrypt.hash(password, 10); // 10 is the number of salt rounds
     const newUser = await userModel.create({ gmail, password: hashedPassword });
 
-    // Send email to the newly registered user
-    const mailOptions = {
-      from: process.env.EMAIL_USER,
-      to: newUser?.gmail,
-      subject: "Welcome to Affiliates!",
-      text: `Welcome to Affiliates!\n\nYour login credentials are:\n\nEmail: ${newUser?.gmail}\n\nWe hope to help your company leverage your potential with our service!\n\nBest Regards,\nTeam Velo!`,
-    };
+    // // Send email to the newly registered user
+    // const mailOptions = {
+    //   from: process.env.EMAIL_USER,
+    //   to: newUser?.gmail,
+    //   subject: "Welcome to Affiliates!",
+    //   text: `Welcome to Affiliates!\n\nYour login credentials are:\n\nEmail: ${newUser?.gmail}\n\nWe hope to help your company leverage your potential with our service!\n\nBest Regards,\nTeam Velo!`,
+    // };
 
-    transporter.sendMail(mailOptions, function (error, info) {
-      if (error) {
-        console.error(error);
-        return res.status(500).json({ Alert: "Error sending email" });
-      } else {
-        console.log("Email sent: " + info.response);
-        return res.status(201).json({ Alert: `${gmail} added` });
-      }
-    });
+    // transporter.sendMail(mailOptions, function (error, info) {
+    //   if (error) {
+    //     console.error(error);
+    //     return res.status(500).json({ Alert: "Error sending email" });
+    //   } else {
+    //     console.log("Email sent: " + info.response);
+    //     return res.status(201).json({ Alert: `${gmail} added` });
+    //   }
+    // });
+    return res.status(201).json({Alert: `${gmail} added`})
   } catch (err) {
     console.error(err);
     return res.status(500).json({ Alert: err.message });
@@ -64,15 +65,18 @@ Router.post("/login", async (req, res) => {
 
   try {
     const user = await userModel.findOne({ gmail });
+    console.log(gmail,password)
     if (!user) {
       return res.status(404).json({ Alert: "User not found" });
     }
 
     const passwordMatch = await bcrypt.compare(password, user.password);
+    console.log("passwordMatch:", passwordMatch, user.password, password)
     if (passwordMatch) {
       const token = jwt.sign({ userId: user._id }, JWT_SECRET, {
         expiresIn: "1h",
       }); // Expires in 1 hour
+
       return res.status(200).json({ token, user });
     } else {
       return res.status(401).json({ Alert: "Wrong password" });
