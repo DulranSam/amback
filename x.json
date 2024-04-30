@@ -1,0 +1,53 @@
+[
+    {
+      "title": "T-Shirt",
+      "description": "Casual t-shirt for everyday wear",
+      "mediaUrl": "https://example.com/tshirt.jpg",
+      "mediaType": "photo",
+      "link": "https://example.com/products/t-shirt",
+      "category": "clothing",
+      "commission": "10%",
+      "user": "613f356ad1c1380026b85c16"
+    },
+    {
+      "title": "Running Shoes",
+      "description": "Comfortable running shoes for fitness enthusiasts",
+      "mediaUrl": "https://example.com/runningshoes.jpg",
+      "mediaType": "photo",
+      "link": "https://example.com/products/running-shoes",
+      "category": "sports",
+      "commission": "8%",
+      "user": "613f356ad1c1380026b85c16"
+    },
+    {
+      "title": "Smartphone",
+      "description": "Latest smartphone model with advanced features",
+      "mediaUrl": "https://example.com/smartphone.jpg",
+      "mediaType": "photo",
+      "link": "https://example.com/products/smartphone",
+      "category": "electronics",
+      "commission": "12%",
+      "user": "613f356ad1c1380026b85c17"
+    },
+    {
+      "title": "Yoga Mat",
+      "description": "High-quality yoga mat for yoga practitioners",
+      "mediaUrl": "https://example.com/yogamat.jpg",
+      "mediaType": "photo",
+      "link": "https://example.com/products/yoga-mat",
+      "category": "health",
+      "commission": "15%",
+      "user": "613f356ad1c1380026b85c18"
+    },
+    {
+      "title": "Headphones",
+      "description": "Wireless headphones for music lovers",
+      "mediaUrl": "https://example.com/headphones.jpg",
+      "mediaType": "photo",
+      "link": "https://example.com/products/headphones",
+      "category": "electronics",
+      "commission": "10%",
+      "user": "613f356ad1c1380026b85c19"
+    }
+  ]
+  
