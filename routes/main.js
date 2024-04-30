@@ -37,9 +37,6 @@ Router.route("/")
       const decodedToken = jwt.verify(token, process.env.JWT_SECRET); // Use JWT_SECRET from process.env
       const userId = decodedToken.userId;
 
-      // Find the user by ID
-      const userObject = await userModel.findById(userId);
-
       // Upload media (photo or video) to Cloudinary
       const result = await cloudinary.uploader.upload_stream(
         { resource_type: "auto" },
@@ -101,31 +98,14 @@ Router.route("/:id")
       link,
       category,
       commission,
-      gmail,
-      password,
     } = req.body;
 
-    if (!id || !gmail || !password)
-      return res
-        .status(400)
-        .json({ Alert: "ID and user authentication required" });
+    if (!id)
+      return res.status(400).json({ Alert: "ID is required for update" });
 
     try {
-      // Decode the token to get user ID
-      const token = req.headers.authorization.split(" ")[1];
-      const decodedToken = jwt.verify(token, process.env.JWT_SECRET); // Use JWT_SECRET from process.env
-      const userId = decodedToken.userId;
-
       // Find the document by ID
       let data = await mainModel.findById(id);
-
-      // Check if the user who added the item is trying to edit it
-      if (data?.userId !== userId) {
-        // Assuming data.userId holds the user ID who added the item
-        return res.status(401).json({
-          Alert: "Unauthorized. You are not allowed to modify this item.",
-        });
-      }
 
       // Update the document fields with the new values from the request body
       data.title = title;

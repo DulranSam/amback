@@ -35,7 +35,7 @@ Router.route("/register").post(async (req, res) => {
     // Send email to the newly registered user
     const mailOptions = {
       from: process.env.EMAIL_USER,
-      to: newUser.email,
+      to: newUser?.email,
       subject: "Welcome to Affiliates!",
       text: `Welcome to Affiliates!\n\nYour login credentials are:\n\nEmail: ${newUser?.email}\n\nWe hope to help your company leverage your potential with our service!\n\nBest Regards,\nTeam Velo!`,
     };

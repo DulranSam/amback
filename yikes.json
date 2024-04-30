@@ -1,92 +1,92 @@
 [
   {
-    "title": "Example Title 1",
-    "description": "Example Description 1",
-    "video": "example_video_url_1",
-    "timestamps": ["timestamp1", "timestamp2", "timestamp3"],
-    "link": "example_link_1",
-    "category": "example_category_1",
-    "commission": "example_commission_1"
+    "title": "Best Laptop Deals",
+    "description": "Get amazing discounts on top laptop brands",
+    "mediaUrl": "https://example.com/laptop-deals.jpg",
+    "link": "https://affiliate.example.com/laptop-deals",
+    "category": "electronics",
+    "commission": "10%",
+    "user": "60ec6fe7a02b8b001fd53ac9"
   },
   {
-    "title": "Example Title 2",
-    "description": "Example Description 2",
-    "video": "example_video_url_2",
-    "timestamps": ["timestamp1", "timestamp2", "timestamp3"],
-    "link": "example_link_2",
-    "category": "example_category_2",
-    "commission": "example_commission_2"
+    "title": "Fitness Supplements Sale",
+    "description": "Boost your workout with premium supplements",
+    "mediaUrl": "https://example.com/fitness-supplements.jpg",
+    "link": "https://affiliate.example.com/fitness-supplements",
+    "category": "health",
+    "commission": "15%",
+    "user": "60ec6fe7a02b8b001fd53aca"
   },
   {
-    "title": "Example Title 3",
-    "description": "Example Description 3",
-    "video": "example_video_url_3",
-    "timestamps": ["timestamp1", "timestamp2", "timestamp3"],
-    "link": "example_link_3",
-    "category": "example_category_3",
-    "commission": "example_commission_3"
+    "title": "Fashion Clearance",
+    "description": "Get stylish clothes at unbeatable prices",
+    "mediaUrl": "https://example.com/fashion-clearance.jpg",
+    "link": "https://affiliate.example.com/fashion-clearance",
+    "category": "fashion",
+    "commission": "12%",
+    "user": "60ec6fe7a02b8b001fd53acb"
   },
   {
-    "title": "Example Title 4",
-    "description": "Example Description 4",
-    "video": "example_video_url_4",
-    "timestamps": ["timestamp1", "timestamp2", "timestamp3"],
-    "link": "example_link_4",
-    "category": "example_category_4",
-    "commission": "example_commission_4"
+    "title": "Travel Discounts",
+    "description": "Explore the world with budget-friendly deals",
+    "mediaUrl": "https://example.com/travel-discounts.jpg",
+    "link": "https://affiliate.example.com/travel-discounts",
+    "category": "travel",
+    "commission": "8%",
+    "user": "60ec6fe7a02b8b001fd53acc"
   },
   {
-    "title": "Example Title 5",
-    "description": "Example Description 5",
-    "video": "example_video_url_5",
-    "timestamps": ["timestamp1", "timestamp2", "timestamp3"],
-    "link": "example_link_5",
-    "category": "example_category_5",
-    "commission": "example_commission_5"
+    "title": "Home Decor Sale",
+    "description": "Upgrade your living space with affordable decor",
+    "mediaUrl": "https://example.com/home-decor-sale.jpg",
+    "link": "https://affiliate.example.com/home-decor-sale",
+    "category": "home",
+    "commission": "10%",
+    "user": "60ec6fe7a02b8b001fd53acd"
   },
   {
-    "title": "Example Title 6",
-    "description": "Example Description 6",
-    "video": "example_video_url_6",
-    "timestamps": ["timestamp1", "timestamp2", "timestamp3"],
-    "link": "example_link_6",
-    "category": "example_category_6",
-    "commission": "example_commission_6"
+    "title": "Gaming Gear Discounts",
+    "description": "Get the latest gaming peripherals at discounted prices",
+    "mediaUrl": "https://example.com/gaming-gear-discounts.jpg",
+    "link": "https://affiliate.example.com/gaming-gear-discounts",
+    "category": "electronics",
+    "commission": "12%",
+    "user": "60ec6fe7a02b8b001fd53ace"
   },
   {
-    "title": "Example Title 7",
-    "description": "Example Description 7",
-    "video": "example_video_url_7",
-    "timestamps": ["timestamp1", "timestamp2", "timestamp3"],
-    "link": "example_link_7",
-    "category": "example_category_7",
-    "commission": "example_commission_7"
+    "title": "Healthy Eating Cookbook",
+    "description": "Discover delicious and nutritious recipes",
+    "mediaUrl": "https://example.com/healthy-eating-cookbook.jpg",
+    "link": "https://affiliate.example.com/healthy-eating-cookbook",
+    "category": "health",
+    "commission": "10%",
+    "user": "60ec6fe7a02b8b001fd53acf"
   },
   {
-    "title": "Example Title 8",
-    "description": "Example Description 8",
-    "video": "example_video_url_8",
-    "timestamps": ["timestamp1", "timestamp2", "timestamp3"],
-    "link": "example_link_8",
-    "category": "example_category_8",
-    "commission": "example_commission_8"
+    "title": "Outdoor Adventure Gear Sale",
+    "description": "Equip yourself for your next outdoor expedition",
+    "mediaUrl": "https://example.com/outdoor-gear-sale.jpg",
+    "link": "https://affiliate.example.com/outdoor-gear-sale",
+    "category": "outdoors",
+    "commission": "15%",
+    "user": "60ec6fe7a02b8b001fd53ad0"
   },
   {
-    "title": "Example Title 9",
-    "description": "Example Description 9",
-    "video": "example_video_url_9",
-    "timestamps": ["timestamp1", "timestamp2", "timestamp3"],
-    "link": "example_link_9",
-    "category": "example_category_9",
-    "commission": "example_commission_9"
+    "title": "Cooking Utensils Clearance",
+    "description": "Upgrade your kitchen with discounted utensils",
+    "mediaUrl": "https://example.com/cooking-utensils-clearance.jpg",
+    "link": "https://affiliate.example.com/cooking-utensils-clearance",
+    "category": "home",
+    "commission": "10%",
+    "user": "60ec6fe7a02b8b001fd53ad1"
   },
   {
-    "title": "Example Title 10",
-    "description": "Example Description 10",
-    "video": "example_video_url_10",
-    "timestamps": ["timestamp1", "timestamp2", "timestamp3"],
-    "link": "example_link_10",
-    "category": "example_category_10",
-    "commission": "example_commission_10"
+    "title": "Fashion Accessories Sale",
+    "description": "Complete your look with trendy accessories",
+    "mediaUrl": "https://example.com/fashion-accessories-sale.jpg",
+    "link": "https://affiliate.example.com/fashion-accessories-sale",
+    "category": "fashion",
+    "commission": "12%",
+    "user": "60ec6fe7a02b8b001fd53ad2"
   }
 ]

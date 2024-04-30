@@ -13,7 +13,7 @@ Router.route("/").post(async (req, res) => {
     Object.entries(search).forEach(([key, value]) => {
       // Add $match stage for each key-value pair
       // Use regex for partial matches and case-insensitive search
-      const matchStage = { $match: { [key]: { $regex: new RegExp(value, "i") } } };
+      const matchStage = { $match: { [key]: { $regex: `.*${value}.*`, $options: 'i' } } };
       pipeline.push(matchStage);
     });
 
