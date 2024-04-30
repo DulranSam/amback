@@ -1,4 +1,5 @@
 const mongoose = require("mongoose");
+
 const mainSchema = new mongoose.Schema({
   title: {
     type: String,
@@ -17,6 +18,11 @@ const mainSchema = new mongoose.Schema({
   mediaUrl: {
     type: String,
     required: true,
+  },
+  mediaType: { // New field to indicate the type of media (photo or video)
+    type: String,
+    required: true,
+    enum: ["photo", "video"] // Only accepts "photo" or "video" values
   },
   link: {
     type: String,

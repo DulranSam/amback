@@ -19,6 +19,7 @@ Router.route("/")
   .post(upload.single("media"), async (req, res) => {
     const { title, description, link, category, commission } = req.body;
     const mediaBuffer = req.file ? req.file.buffer : null; // Use req.file.buffer
+    const mediaType = req.file ? req.file.mimetype.startsWith('image') ? 'photo' : 'video' : null; // Identify media type
 
     if (
       !title ||
@@ -26,7 +27,8 @@ Router.route("/")
       !link ||
       !category ||
       !commission ||
-      !mediaBuffer
+      !mediaBuffer ||
+      !mediaType
     ) {
       return res.status(400).json({ Alert: "Required fields not filled" });
     }
@@ -52,6 +54,7 @@ Router.route("/")
             link,
             category,
             mediaUrl: mediaUrlCloud,
+            mediaType, // Include media type in the document
             commission,
             user: userId, // Associate the listing with the user ID
           });

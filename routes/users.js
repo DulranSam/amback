@@ -19,25 +19,26 @@ const transporter = nodemailer.createTransport({
 });
 
 Router.route("/register").post(async (req, res) => {
-  const { email, password } = req.body;
-  if (!email || !password)
-    return res.status(400).json({ Alert: "Email and password required" });
+  const { gmail, password } = req.body;
+  console.log(req.body);
+  if (!gmail || !password)
+    return res.status(400).json({ Alert: "gmail and password required" });
 
   try {
-    const userExists = await userModel.findOne({ email });
+    const userExists = await userModel.findOne({ gmail });
     if (userExists) {
       return res.status(409).json({ Alert: "User already exists" });
     }
 
     const hashedPassword = await bcrypt.hash(password, 10); // 10 is the number of salt rounds
-    const newUser = await userModel.create({ email, password: hashedPassword });
+    const newUser = await userModel.create({ gmail, password: hashedPassword });
 
     // Send email to the newly registered user
     const mailOptions = {
       from: process.env.EMAIL_USER,
-      to: newUser?.email,
+      to: newUser?.gmail,
       subject: "Welcome to Affiliates!",
-      text: `Welcome to Affiliates!\n\nYour login credentials are:\n\nEmail: ${newUser?.email}\n\nWe hope to help your company leverage your potential with our service!\n\nBest Regards,\nTeam Velo!`,
+      text: `Welcome to Affiliates!\n\nYour login credentials are:\n\nEmail: ${newUser?.gmail}\n\nWe hope to help your company leverage your potential with our service!\n\nBest Regards,\nTeam Velo!`,
     };
 
     transporter.sendMail(mailOptions, function (error, info) {
@@ -46,7 +47,7 @@ Router.route("/register").post(async (req, res) => {
         return res.status(500).json({ Alert: "Error sending email" });
       } else {
         console.log("Email sent: " + info.response);
-        return res.status(201).json({ Alert: `${email} added` });
+        return res.status(201).json({ Alert: `${gmail} added` });
       }
     });
   } catch (err) {
@@ -56,12 +57,13 @@ Router.route("/register").post(async (req, res) => {
 });
 
 Router.route("/login").post(async (req, res) => {
-  const { email, password } = req.body;
-  if (!email || !password)
-    return res.status(400).json({ Alert: "Email and password required" });
+  const { gmail, password } = req.body;
+
+  if (!gmail || !password)
+    return res.status(400).json({ Alert: "gmail and password required" });
 
   try {
-    const user = await userModel.findOne({ email });
+    const user = await userModel.findOne({ gmail });
     if (!user) {
       return res.status(404).json({ Alert: "User not found" });
     }
