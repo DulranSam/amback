@@ -17,7 +17,7 @@ const upload = multer({ storage });
 
 Router.route("/")
   .post(upload.single("media"), async (req, res) => {
-    const { title, description, link, category, commission } = req.body;
+    const { title, description, link, category, commission,userId } = req.body;
     const mediaBuffer = req.file ? req.file.buffer : null; // Use req.file.buffer
     const mediaType = req.file ? req.file.mimetype.startsWith('image') ? 'photo' : 'video' : null; // Identify media type
 
@@ -28,10 +28,12 @@ Router.route("/")
       !category ||
       !commission ||
       !mediaBuffer ||
-      !mediaType
+      !mediaType || !userId
     ) {
       return res.status(400).json({ Alert: "Required fields not filled" });
     }
+
+ 
 
     try {
       // Decode the token to get user ID

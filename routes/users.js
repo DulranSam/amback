@@ -56,7 +56,7 @@ Router.route("/register").post(async (req, res) => {
   }
 });
 
-Router.route("/login").post(async (req, res) => {
+Router.post("/login", async (req, res) => {
   const { gmail, password } = req.body;
 
   if (!gmail || !password)
