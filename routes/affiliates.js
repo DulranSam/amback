@@ -5,12 +5,12 @@ const crypto = require("crypto");
 
 // POST route to create an affiliate link for added products
 Router.route("/").post(async (req, res) => {
-  const { productId } = req.body; // Assuming productId is provided in the request body
+  const { productId, affiliateId } = req.body; // Assuming productId and affiliateId are provided in the request body
 
   try {
-    // Validate productId (you can add more validation as needed)
-    if (!productId) {
-      return res.status(400).json({ error: "Product ID is required." });
+    // Validate productId and affiliateId (you can add more validation as needed)
+    if (!productId || !affiliateId) {
+      return res.status(400).json({ error: "Product ID and Affiliate ID are required." });
     }
 
     // Find the product details from the database using productId
@@ -21,20 +21,20 @@ Router.route("/").post(async (req, res) => {
       return res.status(404).json({ error: "Product not found." });
     }
 
-    // Generate hash of product details including productId
-    const hash = generateHash(product, productId);
+    // Generate hash of product details including productId and affiliateId
+    const hash = generateHash(product, productId, affiliateId);
 
-    // Return the hashed value along with productId
-    return res.status(200).json({ productId, hash });
+    // Return the hashed value along with productId and affiliateId
+    return res.status(200).json({ productId, affiliateId, hash });
   } catch (err) {
     console.error(err);
     return res.status(500).json({ error: err.message });
   }
 });
 
-// Route to handle incoming hashed product links
-Router.route("/:hash").get(async (req, res) => {
-  const { hash } = req.params;
+// Route to handle incoming hashed affiliate product links
+Router.route("/:affiliateId/:hash").get(async (req, res) => {
+  const { affiliateId, hash } = req.params;
 
   try {
     // Find the product with the matching hash
@@ -45,6 +45,8 @@ Router.route("/:hash").get(async (req, res) => {
       return res.status(404).json({ error: "Product not found." });
     }
 
+    // Log the affiliate visit (you can implement this functionality as needed)
+
     // Redirect the user to the product page
     return res.status(200).json(product); // Assuming your product page route is /products/:productId
   } catch (err) {
@@ -53,9 +55,9 @@ Router.route("/:hash").get(async (req, res) => {
   }
 });
 
-// Function to generate hash of product details including productId
-function generateHash(product, productId) {
-  const dataToHash = `${product.title}-${product.description}-${product.mediaUrl}-${product.mediaType}-${product.link}-${product.category}-${product.commission}-${productId}`;
+// Function to generate hash of product details including productId and affiliateId
+function generateHash(product, productId, affiliateId) {
+  const dataToHash = `${product.title}-${product.description}-${product.mediaUrl}-${product.mediaType}-${product.link}-${product.category}-${product.commission}-${productId}-${affiliateId}`;
   const hash = crypto.createHash("sha256").update(dataToHash).digest("hex");
   return hash;
 }
