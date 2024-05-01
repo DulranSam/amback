@@ -59,7 +59,6 @@ Router.route("/register").post(async (req, res) => {
 
 Router.post("/login", async (req, res) => {
   const { gmail, password } = req.body;
-
   if (!gmail || !password)
     return res.status(400).json({ Alert: "gmail and password required" });
 
@@ -73,6 +72,7 @@ Router.post("/login", async (req, res) => {
     const passwordMatch = await bcrypt.compare(password, user.password);
     console.log("passwordMatch:", passwordMatch, user.password, password)
     if (passwordMatch) {
+
       const token = jwt.sign({ userId: user._id }, JWT_SECRET, {
         expiresIn: "1h",
       }); // Expires in 1 hour
