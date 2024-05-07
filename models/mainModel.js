@@ -19,10 +19,10 @@ const mainSchema = new mongoose.Schema({
     type: String,
     required: true,
   },
-  mediaType: { // New field to indicate the type of media (photo or video)
+  mediaType: { 
     type: String,
     required: true,
-    enum: ["photo", "video"] // Only accepts "photo" or "video" values
+    enum: ["photo", "video"] 
   },
   link: {
     type: String,
@@ -47,11 +47,17 @@ const mainSchema = new mongoose.Schema({
     trim: true,
     maxlength: 20,
   },
-  // user: {
-  //   type: mongoose.Schema.Types.ObjectId,
-  //   ref: "users",
-
-  // },
+  productID: {
+    type: mongoose.Schema.Types.ObjectId, // Using ObjectId type for auto-generation
+    index: true,
+    required: true,
+    unique: true,
+    auto: true
+  },
+  affilates: {
+    type: [String],
+    default: []
+  }
 });
 
 const mainModel = mongoose.model("mains", mainSchema);

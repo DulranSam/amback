@@ -58,6 +58,7 @@ Router.route("/")
             mediaUrl: mediaUrlCloud,
             mediaType, // Include media type in the document
             commission,
+            productID
             // user: userId, // Associate the listing with the user ID
           });
 
