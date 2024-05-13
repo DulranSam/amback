@@ -49,7 +49,7 @@ Router.route("/")
 
           const mediaUrlCloud = result.secure_url;
 
-          // Create the document in the database
+
           await mainModel.create({
             title,
             description,
