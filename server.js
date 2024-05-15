@@ -12,7 +12,8 @@ app.use("/users", require("./routes/users")); //done
 app.use("/feedbacks", require("./routes/feedback")); //done
 app.use("/searchs", require("./routes/searchs")); //bugs
 app.use("/bots",require("./routes/gemini")); //works
-app.use("/affiliates",require("./routes/affiliates"))
+app.use("/affiliates",require("./routes/affiliates"));
+app.use("/socials",require("./routes/socials"));
 
 app.listen(process.env.PORT, async () => {
   await db();
