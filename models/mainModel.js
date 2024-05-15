@@ -47,7 +47,7 @@ const mainSchema = new mongoose.Schema({
     trim: true,
     maxlength: 20,
   },
-  productID: {
+  productId: {
     type: mongoose.Schema.Types.ObjectId, // Using ObjectId type for auto-generation
     index: true,
     required: true,

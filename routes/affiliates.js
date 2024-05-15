@@ -5,7 +5,7 @@ const AffiliateModel = require("../models/affiliateModel"); // Import AffiliateM
 const crypto = require("crypto");
 
 Router.route("/").post(async (req, res) => {
-  const { productId, affiliateId } = req.body;
+  const { productId, affiliateId } = req?.body;
 
   try {
     if (!productId || !affiliateId) {
@@ -25,7 +25,7 @@ Router.route("/").post(async (req, res) => {
     }
 
     const hash = generateHash(product, productId, affiliateId);
-    const affiliateLink = `/products/${productId}/affiliate/${affiliateId}/${hash}`;
+    const affiliateLink = `/products/${productId}/affiliate/${affiliateId}?hash=${hash}`;
 
     return res.status(200).json({ affiliateLink });
   } catch (err) {
@@ -34,29 +34,29 @@ Router.route("/").post(async (req, res) => {
   }
 });
 
-Router.route("/:productId/affiliate/:affiliateId/:hash").get(
-  async (req, res) => {
-    const { productId, affiliateId, hash } = req.params;
-    if (!productId || !affiliateId || !hash) {
-      return res.status(400).json({ Alert: "Required fields missing!" });
-    }
+Router.route("/:productId/affiliate/:affiliateId").get(async (req, res) => {
+  const { productId, affiliateId } = req.params;
+  const hash = req.query.hash;
 
-    try {
-      const validProduct = await findProductByHash(productId, hash);
-
-      if (!validProduct) {
-        return res.status(404).json({ error: "Invalid product or hash." });
-      }
-
-      logAffiliateReferral(affiliateId, productId);
-
-      return res.redirect(`/products/${productId}`);
-    } catch (err) {
-      console.error(err);
-      return res.status(500).json({ error: err.message });
-    }
+  if (!productId || !affiliateId || !hash) {
+    return res.status(400).json({ Alert: "Required fields missing!" });
   }
-);
+
+  try {
+    const validProduct = await findProductByHash(productId, hash);
+
+    if (!validProduct) {
+      return res.status(404).json({ error: "Invalid product or hash." });
+    }
+
+    logAffiliateReferral(affiliateId, productId);
+
+    return res.redirect(`/products/${productId}`);
+  } catch (err) {
+    console.error(err);
+    return res.status(500).json({ error: err.message });
+  }
+});
 
 function generateHash(product, productId, affiliateId) {
   const dataToHash = `${product.title}-${product.description}-${product.mediaUrl}-${product.mediaType}-${product.link}-${product.category}-${product.commission}-${productId}-${affiliateId}`;

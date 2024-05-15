@@ -14,8 +14,6 @@ router.route("/").post(async (req, res) => {
     const result = await model.generateContent(prompt);
     const response = result.response.text();
 
-    // Format the response: apply bold for text between **, line breaks for "\n",
-    // and remove unwanted characters
     const formattedResponse = response
       .replace(/\*\*(.*?)\*\*/g, '<b>$1</b>') // Bold text between **
       .replace(/\n/g, '<br>') // Line breaks
