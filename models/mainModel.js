@@ -19,10 +19,10 @@ const mainSchema = new mongoose.Schema({
     type: String,
     required: true,
   },
-  mediaType: { 
+  mediaType: {
     type: String,
     required: true,
-    enum: ["photo", "video"] 
+    enum: ["photo", "video"],
   },
   link: {
     type: String,
@@ -48,16 +48,16 @@ const mainSchema = new mongoose.Schema({
     maxlength: 20,
   },
   productId: {
-    type: mongoose.Schema.Types.ObjectId, // Using ObjectId type for auto-generation
+    type: mongoose.Schema.Types.ObjectId,
     index: true,
     required: true,
     unique: true,
-    auto: true
+    auto: true,
   },
   affilates: {
     type: [String],
-    default: []
-  }
+    default: [],
+  },
 });
 
 const mainModel = mongoose.model("mains", mainSchema);

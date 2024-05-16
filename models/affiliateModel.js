@@ -1,35 +1,18 @@
 const mongoose = require("mongoose");
+
 const affiliateSchema = new mongoose.Schema({
-  name: {
+  affiliateId: {
     type: String,
-    required: true,
-  },
-  email: {
-    type: String,
-    required: true,
+    trim: true,
     unique: true,
   },
-  password: {
-    type: String,
+  productId: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: "mains",
     required: true,
   },
-  referralCode: {
-    type: String,
-    unique: true,
-  },
-  earnings: {
-    type: Number,
-    default: 0,
-  },
-  createdAt: {
-    type: Date,
-    default: Date.now,
-  },
-  affiliateId:{
-    
-  }
 });
 
-const Affiliate = mongoose.model("affialiates", affiliateSchema);
+const Affiliate = mongoose.model("affiliates", affiliateSchema);
 
 module.exports = Affiliate;

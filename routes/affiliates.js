@@ -49,9 +49,9 @@ Router.route("/:productId/affiliate/:affiliateId").get(async (req, res) => {
       return res.status(404).json({ error: "Invalid product or hash." });
     }
 
-    logAffiliateReferral(affiliateId, productId);
+    const outcome = logAffiliateReferral(affiliateId, productId);
 
-    return res.redirect(`/products/${productId}`);
+    return res.status(200).json(outcome);
   } catch (err) {
     console.error(err);
     return res.status(500).json({ error: err.message });
