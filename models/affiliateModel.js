@@ -2,9 +2,9 @@ const mongoose = require("mongoose");
 
 const affiliateSchema = new mongoose.Schema({
   affiliateId: {
-    type: String,
-    trim: true,
-    unique: true,
+    type: mongoose.Schema.Types.ObjectId,
+    ref: "users",
+    required: true,
   },
   productId: {
     type: mongoose.Schema.Types.ObjectId,
