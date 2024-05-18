@@ -36,7 +36,8 @@ Router.route("/").post(async (req, res) => {
   }
 });
 
-Router.route("/affiliated").post(async (req, res) => { //join affiliate program
+Router.route("/affiliated").post(async (req, res) => {
+  //join affiliate program
   const { userId } = req?.body;
   if (!userId) return res.status(400).json({ alert: "User required!" });
 
