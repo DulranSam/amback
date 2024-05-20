@@ -1,10 +1,24 @@
 const express = require("express");
 const Router = express.Router();
 const socialModel = require("../models/socialModel");
+const multer = require("multer");
+
+// Configure multer for file uploads
+const storage = multer.diskStorage({
+  destination: (req, file, cb) => {
+    cb(null, "uploads/"); // Specify the upload directory
+  },
+  filename: (req, file, cb) => {
+    cb(null, `${Date.now()}-${file.originalname}`); // Generate a unique filename
+  }
+});
+
+const upload = multer({ storage });
 
 Router.route("/")
-  .post(async (req, res) => {
-    const { title, content, userId, comments } = req.body;
+  .post(upload.single("image"), async (req, res) => {
+    const { title, content, userId, tags } = req.body;
+    const image = req.file ? req.file.path : null;
 
     // Input validation
     if (!title || !content || !userId) {
@@ -17,7 +31,8 @@ Router.route("/")
         title,
         content,
         userId,
-        comments: comments || []
+        image,
+        tags: tags ? tags.split(",") : [] // Convert tags string to array
       });
 
       // Save the document to the database
