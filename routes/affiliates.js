@@ -1,9 +1,13 @@
 const express = require("express");
 const Router = express.Router();
 const dataModel = require("../models/mainModel");
-const AffiliateModel = require("../models/affiliateModel"); // Import AffiliateModel
+const AffiliateModel = require("../models/affiliateModel");
 const userModel = require("../models/userModel");
+const PurchaseModel = require("../models/purchaseModel");
+const CommissionModel = require("../models/comissionModel");
 const crypto = require("crypto");
+
+// Existing routes...
 
 Router.route("/").post(async (req, res) => {
   //hashing to url
@@ -20,10 +24,12 @@ Router.route("/").post(async (req, res) => {
       return res.status(404).json({ error: "Product not found." });
     }
 
-    const affiliate = await AffiliateModel.findById(affiliateId);
+    const affiliate = await userModel.findById(affiliateId);
 
     if (!affiliate) {
-      return res.status(404).json({ error: "Affiliate not found." });
+      return res.status(404).json({ error: "User not found" });
+    } else if (!affiliate.affiliated) {
+      return res.status(500).json({ error: "User not affiliated" });
     }
 
     const hash = generateHash(product, productId, affiliateId);
@@ -49,6 +55,8 @@ Router.route("/affiliated").post(async (req, res) => {
   const state = await userExists.updateOne({ affiliated: true });
   if (!state) {
     return res.status(403).json({ alert: "Error while updating!" });
+  } else if (state.affiliated) {
+    return res.status(409).json({ Alert: "Already an affiliate!" });
   } else {
     return res.status(200).json({ Alert: "Affiliate Updated!" });
   }
@@ -92,6 +100,52 @@ async function findProductByHash(productId, hash) {
 
 function logAffiliateReferral(affiliateId, productId) {
   console.log(`Affiliate ${affiliateId} referred product ${productId}`);
+}
+
+Router.route("/purchase").post(async (req, res) => {
+  const { productId, userId, affiliateId, amount } = req.body;
+
+  try {
+    if (!productId || !userId || !affiliateId || !amount) {
+      return res.status(400).json({ error: "All fields are required." });
+    }
+
+    const product = await dataModel.findById(productId);
+    const user = await userModel.findById(userId);
+    const affiliate = await userModel.findById(affiliateId);
+
+    if (!product || !user || !affiliate) {
+      return res
+        .status(404)
+        .json({ error: "Product, User or Affiliate not found." });
+    }
+
+    const purchase = new PurchaseModel({
+      productId,
+      userId,
+      affiliateId,
+      amount,
+    });
+    await purchase.save();
+
+    const commissionAmount = calculateCommission(amount, product.commission);
+    const commission = new CommissionModel({
+      affiliateId,
+      amount: commissionAmount,
+    });
+    await commission.save();
+
+    return res
+      .status(200)
+      .json({ message: "Purchase recorded and commission calculated." });
+  } catch (err) {
+    console.error(err);
+    return res.status(500).json({ error: err.message });
+  }
+});
+
+function calculateCommission(amount, commissionRate) {
+  return (amount * commissionRate) / 100;
 }
 
 module.exports = Router;
