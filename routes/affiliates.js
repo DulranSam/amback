@@ -6,8 +6,8 @@ const userModel = require("../models/userModel");
 const PurchaseModel = require("../models/purchaseModel");
 const CommissionModel = require("../models/comissionModel");
 const crypto = require("crypto");
+const comissionModel = require("../models/comissionModel");
 
-// Existing routes...
 
 Router.route("/").post(async (req, res) => {
   //hashing to url
@@ -50,6 +50,8 @@ Router.route("/affiliated").post(async (req, res) => {
   const userExists = await userModel.findById(userId);
   if (!userExists) {
     return res.status(404).json({ Alert: "User not found" });
+  } else if (userExists.affiliated) {
+    return res.status(402).json({ Alert: "User already affiliated" });
   }
 
   const state = await userExists.updateOne({ affiliated: true });
@@ -147,5 +149,27 @@ Router.route("/purchase").post(async (req, res) => {
 function calculateCommission(amount, commissionRate) {
   return (amount * commissionRate) / 100;
 }
+
+Router.route("/comissions").post(async (req, res) => {
+  const { affiliate } = req?.body;
+  if (!affiliate)
+    return res.status(400).json({ Alert: "Affilate ID Required!" });
+
+  const checkUp = await comissionModel.aggregate({
+    $match: { affiliateId: affiliate },
+  });
+  if (!checkUp || !checkUp.length) {
+    return res.status(404).json({ Alert: "Affiliate not found" });
+  }
+
+  let totalAmount = 0;
+
+  checkUp.forEach((iter) => {
+    if (iter?.amount > 0) {
+      totalAmount += iter?.amount;
+      return res.status(200).json({ totalEarnings: totalAmount });
+    }
+  });
+});
 
 module.exports = Router;
