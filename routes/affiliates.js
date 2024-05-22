@@ -4,16 +4,40 @@ const dataModel = require("../models/mainModel");
 const AffiliateModel = require("../models/affiliateModel");
 const userModel = require("../models/userModel");
 const PurchaseModel = require("../models/purchaseModel");
-const CommissionModel = require("../models/comissionModel");
+const CommissionModel = require("../models/commissionModel");
 const crypto = require("crypto");
+const jwt = require("jsonwebtoken"); // For authentication
+const cookieParser = require("cookie-parser");
+
+const SECRET_KEY = "your_secret_key";
+
+// Middleware to check authentication
+function authenticate(req, res, next) {
+  const token = req.cookies.authToken;
+  if (!token) {
+    return res.status(401).json({ error: "Authentication required." });
+  }
+
+  jwt.verify(token, SECRET_KEY, (err, decoded) => {
+    if (err) {
+      return res.status(401).json({ error: "Invalid token." });
+    }
+    req.user = decoded;
+    next();
+  });
+}
+
+// Use cookie-parser middleware
+Router.use(cookieParser());
 
 // Route to generate affiliate link
-Router.route("/").post(async (req, res) => {
-  const { productId, affiliateId } = req.body;
+Router.route("/").post(authenticate, async (req, res) => {
+  const { productId } = req.body;
+  const affiliateId = req.user.id;
 
   try {
-    if (!productId || !affiliateId) {
-      return res.status(400).json({ error: "Product ID and Affiliate ID are required." });
+    if (!productId) {
+      return res.status(400).json({ error: "Product ID is required." });
     }
 
     const product = await dataModel.findById(productId);
@@ -39,9 +63,8 @@ Router.route("/").post(async (req, res) => {
 });
 
 // Route to join affiliate program
-Router.route("/affiliated").post(async (req, res) => {
-  const { userId } = req.body;
-  if (!userId) return res.status(400).json({ alert: "User ID required!" });
+Router.route("/affiliated").post(authenticate, async (req, res) => {
+  const userId = req.user.id;
 
   try {
     const userExists = await userModel.findById(userId);
@@ -75,9 +98,10 @@ Router.route("/:productId/affiliate/:affiliateId").get(async (req, res) => {
     }
 
     logAffiliateReferral(affiliateId, productId);
+    res.cookie('affiliate', { productId, affiliateId }, { maxAge: 30 * 24 * 60 * 60 * 1000 }); // Store referral in cookie
 
-    // Implement redirection or other response logic as needed
-    return res.status(200).json({ message: "Referral logged." });
+    // Implement redirection to the product page or other response logic as needed
+    return res.redirect(`/products/${productId}`);
   } catch (err) {
     console.error(err);
     return res.status(500).json({ error: err.message });
@@ -93,7 +117,6 @@ function generateHash(product, productId, affiliateId) {
 
 // Function to find product by hash
 async function findProductByHash(productId, hash) {
-  // This logic might need adjustment depending on how the hash is stored or used
   const product = await dataModel.findById(productId);
   if (product) {
     const generatedHash = generateHash(product, productId, product.affiliateId); // Adjust parameters as needed
@@ -110,13 +133,21 @@ function logAffiliateReferral(affiliateId, productId) {
 }
 
 // Route to handle purchase
-Router.route("/purchase").post(async (req, res) => {
-  const { productId, userId, affiliateId, amount } = req.body;
+Router.route("/purchase").post(authenticate, async (req, res) => {
+  const { productId, amount } = req.body;
+  const userId = req.user.id;
+  const affiliateData = req.cookies.affiliate;
 
   try {
-    if (!productId || !userId || !affiliateId || !amount) {
-      return res.status(400).json({ error: "All fields are required." });
+    if (!productId || !amount) {
+      return res.status(400).json({ error: "Product ID and amount are required." });
     }
+
+    if (!affiliateData || !affiliateData.affiliateId || !affiliateData.productId) {
+      return res.status(400).json({ error: "Affiliate data missing." });
+    }
+
+    const affiliateId = affiliateData.affiliateId;
 
     const [product, user, affiliate] = await Promise.all([
       dataModel.findById(productId),
@@ -148,28 +179,48 @@ function calculateCommission(amount, commissionRate) {
 }
 
 // Route to handle commissions
-Router.route("/comissions").post(async (req, res) => {
-  const { affiliate } = req.body;
-  if (!affiliate) return res.status(400).json({ alert: "Affiliate ID Required!" });
+Router.route("/commissions").post(authenticate, async (req, res) => {
+  const affiliateId = req.user.id;
 
   try {
-    const checkUp = await CommissionModel.aggregate([
-      { $match: { affiliateId: affiliate } }
-    ]);
-
-    if (!checkUp.length) {
+    const commissions = await CommissionModel.find({ affiliateId });
+    if (!commissions.length) {
       return res.status(404).json({ alert: "Affiliate not found" });
     }
 
-    const totalAmount = checkUp.reduce((acc, curr) => acc + (curr.amount || 0), 0);
-    if (totalAmount > 0) {
-      return res.status(200).json({ totalEarnings: totalAmount });
-    } else {
-      return res.status(410).json({ alert: "No earnings!" });
-    }
+    const totalAmount = commissions.reduce((acc, curr) => acc + (curr.amount || 0), 0);
+    return res.status(200).json({ totalEarnings: totalAmount });
   } catch (error) {
     return res.status(500).json({ alert: "Internal Server Error", error: error.message });
   }
 });
+
+// Route to get affiliate dashboard
+Router.route("/dashboard").get(authenticate, async (req, res) => {
+  const affiliateId = req.user.id;
+
+  try {
+    const [referrals, purchases, commissions] = await Promise.all([
+      // Assuming you have a model or method to get referral logs
+      getReferralsByAffiliate(affiliateId),
+      PurchaseModel.find({ affiliateId }),
+      CommissionModel.find({ affiliateId })
+    ]);
+
+    return res.status(200).json({
+      referrals,
+      purchases,
+      totalEarnings: commissions.reduce((acc, curr) => acc + (curr.amount || 0), 0)
+    });
+  } catch (error) {
+    return res.status(500).json({ alert: "Internal Server Error", error: error.message });
+  }
+});
+
+// Example function to get referrals by affiliate
+async function getReferralsByAffiliate(affiliateId) {
+  // Implement logic to get referral data
+  return [];
+}
 
 module.exports = Router;
