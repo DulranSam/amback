@@ -1,18 +1,9 @@
 const mongoose = require("mongoose");
 
 const affiliateSchema = new mongoose.Schema({
-  affiliateId: {
-    type: mongoose.Schema.Types.ObjectId,
-    ref: "users",
-    required: true,
-  },
-  productId: {
-    type: mongoose.Schema.Types.ObjectId,
-    ref: "mains",
-    required: true,
-  },
+  userId: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
+  productId: { type: mongoose.Schema.Types.ObjectId, ref: 'Product' },
+  hash: String,
 });
 
-const Affiliate = mongoose.model("affiliates", affiliateSchema);
-
-module.exports = Affiliate;
+module.exports = mongoose.model("Affiliate", affiliateSchema);
