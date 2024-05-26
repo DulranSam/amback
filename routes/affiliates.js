@@ -14,7 +14,7 @@ Router.use(cookieParser());
 
 Router.route("/").post(authenticate, async (req, res) => {
   const { productId } = req.body;
-  const affiliateId = req.user.id;
+  const affiliateId = req.user._id;
 
   try {
     if (!productId) {
@@ -37,14 +37,14 @@ Router.route("/").post(authenticate, async (req, res) => {
     const affiliateLink = `/products/${productId}/affiliate/${affiliateId}?hash=${hash}`;
 
     return res.status(200).json({ affiliateLink });
-  } catch (err) {
+  } catch (err) { 
     console.error(err);
     return res.status(500).json({ error: err.message });
   }
 });
 
 Router.route("/affiliated").post(authenticate, async (req, res) => {
-  const userId = req.user.id;
+  const userId = req.user._id;
 
   try {
     const user = await userModel.findById(userId);
@@ -151,7 +151,7 @@ Router.route("/purchase").post(authenticate, async (req, res) => {
 });
 
 Router.route("/commissions").get(authenticate, async (req, res) => {
-  const affiliateId = req.user.id;
+  const affiliateId = req.user._id;
 
   try {
     const commissions = await CommissionModel.find({ affiliateId });

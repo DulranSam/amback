@@ -17,9 +17,13 @@ const upload = multer({ storage });
 
 Router.route("/")
   .post(upload.single("media"), async (req, res) => {
-    const { title, description, link, category, commission,userId } = req.body;
+    const { title, description, link, category, commission, userId } = req.body;
     const mediaBuffer = req.file ? req.file.buffer : null; // Use req.file.buffer
-    const mediaType = req.file ? req.file.mimetype.startsWith('image') ? 'photo' : 'video' : null; // Identify media type
+    const mediaType = req.file
+      ? req.file.mimetype.startsWith("image")
+        ? "photo"
+        : "video"
+      : null; // Identify media type
 
     if (
       !title ||
@@ -28,12 +32,11 @@ Router.route("/")
       !category ||
       !commission ||
       !mediaBuffer ||
-      !mediaType || !userId
+      !mediaType ||
+      !userId
     ) {
       return res.status(400).json({ Alert: "Required fields not filled" });
     }
-
- 
 
     try {
       // Decode the token to get user ID
@@ -42,13 +45,11 @@ Router.route("/")
       // const userId = decodedToken.userId;
 
       // Upload media (photo or video) to Cloudinary
-      const result = await cloudinary.uploader.upload_stream(
-        { resource_type: "auto" },
-        async (error, result) => {
+      const result = await cloudinary.uploader
+        .upload_stream({ resource_type: "auto" }, async (error, result) => {
           if (error) throw error;
 
           const mediaUrlCloud = result.secure_url;
-
 
           await mainModel.create({
             title,
@@ -58,13 +59,13 @@ Router.route("/")
             mediaUrl: mediaUrlCloud,
             mediaType, // Include media type in the document
             commission,
-            productID
+            productID,
             // user: userId, // Associate the listing with the user ID
           });
 
           return res.status(201).json({ Alert: "Created" });
-        }
-      ).end(mediaBuffer);
+        })
+        .end(mediaBuffer);
     } catch (err) {
       console.error(err);
       return res.status(500).json({ Error: "Failed to upload media" });
@@ -74,6 +75,7 @@ Router.route("/")
     const selectedType = req.query.type || "all";
 
     try {
+      //there's some bug here
       let data;
       if (selectedType === "all" || selectedType) {
         data = await mainModel.find().sort({ createdAt: -1 });
@@ -84,10 +86,12 @@ Router.route("/")
       }
 
       if (data.length) {
+        console.log(data);
         return res.status(200).json(data);
       } else {
         return res.status(404).json({ Alert: "No results found" });
       }
+    
     } catch (err) {
       console.error(err);
       return res.status(500).json({ Error: "Internal server error" });
@@ -97,14 +101,8 @@ Router.route("/")
 Router.route("/:id")
   .put(async (req, res) => {
     const id = req.params.id;
-    const {
-      title,
-      description,
-      mediaUrl,
-      link,
-      category,
-      commission,
-    } = req.body;
+    const { title, description, mediaUrl, link, category, commission } =
+      req.body;
 
     if (!id)
       return res.status(400).json({ Alert: "ID is required for update" });
@@ -147,6 +145,17 @@ Router.route("/:id")
     } else {
       return res.status(200).json(theItem);
     }
+  });
+
+  Router.route("/buy").post(async(req,res)=>{
+    const {buyItem} = req?.body;
+    await mainModel.aggregate({match:[buyItem]}).then((data)=>{
+      if(data.length && data){
+        return res.status(200).json(data);
+      }else{
+        return res.status(404).json({Alert:"NO results found"})
+      }
+    })
   });
 
 module.exports = Router;
