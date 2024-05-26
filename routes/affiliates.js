@@ -4,12 +4,13 @@ const dataModel = require("../models/mainModel");
 const AffiliateModel = require("../models/affiliateModel");
 const userModel = require("../models/userModel");
 const PurchaseModel = require("../models/purchaseModel");
-const CommissionModel = require("../models/commissionModel");
+const CommissionModel = require("../models/comissionModel");
+const ReferralModel = require("../models/ReferralModel"); // Add this line
 const crypto = require("crypto");
 const jwt = require("jsonwebtoken"); // For authentication
 const cookieParser = require("cookie-parser");
 
-const SECRET_KEY = "your_secret_key";
+const { SECRET_KEY } = process.env;
 
 // Middleware to check authentication
 function authenticate(req, res, next) {
@@ -78,7 +79,9 @@ Router.route("/affiliated").post(authenticate, async (req, res) => {
     return res.status(200).json({ alert: "Affiliate Updated!" });
   } catch (err) {
     console.error(err);
-    return res.status(500).json({ alert: "Error while updating!", error: err.message });
+    return res
+      .status(500)
+      .json({ alert: "Error while updating!", error: err.message });
   }
 });
 
@@ -97,8 +100,12 @@ Router.route("/:productId/affiliate/:affiliateId").get(async (req, res) => {
       return res.status(404).json({ error: "Invalid product or hash." });
     }
 
-    logAffiliateReferral(affiliateId, productId);
-    res.cookie('affiliate', { productId, affiliateId }, { maxAge: 30 * 24 * 60 * 60 * 1000 }); // Store referral in cookie
+    await logAffiliateReferral(affiliateId, productId); // Ensure referral is logged
+    res.cookie(
+      "affiliate",
+      { productId, affiliateId },
+      { maxAge: 30 * 24 * 60 * 60 * 1000 }
+    ); // Store referral in cookie
 
     // Implement redirection to the product page or other response logic as needed
     return res.redirect(`/products/${productId}`);
@@ -127,9 +134,20 @@ async function findProductByHash(productId, hash) {
   return null;
 }
 
-// Function to log affiliate referral
-function logAffiliateReferral(affiliateId, productId) {
-  console.log(`Affiliate ${affiliateId} referred product ${productId}`);
+
+async function logAffiliateReferral(affiliateId, productId) {
+  try {
+    const newReferral = new ReferralModel({ affiliateId, productId });
+    await newReferral.save();
+    console.log(
+      `Logged referral for affiliate ${affiliateId} and product ${productId}`
+    );
+  } catch (err) {
+    console.error(
+      `Error logging referral for affiliate ${affiliateId} and product ${productId}:`,
+      err
+    );
+  }
 }
 
 // Route to handle purchase
@@ -140,10 +158,16 @@ Router.route("/purchase").post(authenticate, async (req, res) => {
 
   try {
     if (!productId || !amount) {
-      return res.status(400).json({ error: "Product ID and amount are required." });
+      return res
+        .status(400)
+        .json({ error: "Product ID and amount are required." });
     }
 
-    if (!affiliateData || !affiliateData.affiliateId || !affiliateData.productId) {
+    if (
+      !affiliateData ||
+      !affiliateData.affiliateId ||
+      !affiliateData.productId
+    ) {
       return res.status(400).json({ error: "Affiliate data missing." });
     }
 
@@ -152,21 +176,33 @@ Router.route("/purchase").post(authenticate, async (req, res) => {
     const [product, user, affiliate] = await Promise.all([
       dataModel.findById(productId),
       userModel.findById(userId),
-      userModel.findById(affiliateId)
+      userModel.findById(affiliateId),
     ]);
 
     if (!product || !user || !affiliate) {
-      return res.status(404).json({ error: "Product, User, or Affiliate not found." });
+      return res
+        .status(404)
+        .json({ error: "Product, User, or Affiliate not found." });
     }
 
-    const purchase = new PurchaseModel({ productId, userId, affiliateId, amount });
+    const purchase = new PurchaseModel({
+      productId,
+      userId,
+      affiliateId,
+      amount,
+    });
     await purchase.save();
 
     const commissionAmount = calculateCommission(amount, product.commission);
-    const commission = new CommissionModel({ affiliateId, amount: commissionAmount });
+    const commission = new CommissionModel({
+      affiliateId,
+      amount: commissionAmount,
+    });
     await commission.save();
 
-    return res.status(200).json({ message: "Purchase recorded and commission calculated." });
+    return res
+      .status(200)
+      .json({ message: "Purchase recorded and commission calculated." });
   } catch (err) {
     console.error(err);
     return res.status(500).json({ error: err.message });
@@ -188,10 +224,15 @@ Router.route("/commissions").post(authenticate, async (req, res) => {
       return res.status(404).json({ alert: "Affiliate not found" });
     }
 
-    const totalAmount = commissions.reduce((acc, curr) => acc + (curr.amount || 0), 0);
+    const totalAmount = commissions.reduce(
+      (acc, curr) => acc + (curr.amount || 0),
+      0
+    );
     return res.status(200).json({ totalEarnings: totalAmount });
   } catch (error) {
-    return res.status(500).json({ alert: "Internal Server Error", error: error.message });
+    return res
+      .status(500)
+      .json({ alert: "Internal Server Error", error: error.message });
   }
 });
 
@@ -201,26 +242,41 @@ Router.route("/dashboard").get(authenticate, async (req, res) => {
 
   try {
     const [referrals, purchases, commissions] = await Promise.all([
-      // Assuming you have a model or method to get referral logs
       getReferralsByAffiliate(affiliateId),
       PurchaseModel.find({ affiliateId }),
-      CommissionModel.find({ affiliateId })
+      CommissionModel.find({ affiliateId }),
     ]);
 
     return res.status(200).json({
       referrals,
       purchases,
-      totalEarnings: commissions.reduce((acc, curr) => acc + (curr.amount || 0), 0)
+      totalEarnings: commissions.reduce(
+        (acc, curr) => acc + (curr.amount || 0),
+        0
+      ),
     });
   } catch (error) {
-    return res.status(500).json({ alert: "Internal Server Error", error: error.message });
+    return res
+      .status(500)
+      .json({ alert: "Internal Server Error", error: error.message });
   }
 });
 
-// Example function to get referrals by affiliate
+// Implementing the getReferralsByAffiliate function
 async function getReferralsByAffiliate(affiliateId) {
-  // Implement logic to get referral data
-  return [];
+  try {
+    const referrals = await ReferralModel.find({ affiliateId }).populate(
+      "productId",
+      "title"
+    ); // Populating with product title for better context
+    return referrals;
+  } catch (err) {
+    console.error(
+      `Error fetching referrals for affiliate ${affiliateId}:`,
+      err
+    );
+    return [];
+  }
 }
 
 module.exports = Router;
