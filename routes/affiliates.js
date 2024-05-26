@@ -1,37 +1,17 @@
 const express = require("express");
 const Router = express.Router();
 const dataModel = require("../models/mainModel");
-const AffiliateModel = require("../models/affiliateModel");
 const userModel = require("../models/userModel");
 const PurchaseModel = require("../models/purchaseModel");
-const CommissionModel = require("../models/commissionModel");
+const CommissionModel = require("../models/comissionModel");
 const ReferralModel = require("../models/referralModel");
-const crypto = require("crypto");
-const jwt = require("jsonwebtoken");
+const generateHash = require("../utils/hashUtil");
+const authenticate = require("../utils/authMiddleware");
 const cookieParser = require("cookie-parser");
+require("dotenv").config();
 
-const { SECRET_KEY } = process.env;
-
-// Middleware to check authentication
-function authenticate(req, res, next) {
-  const token = req.cookies.authToken;
-  if (!token) {
-    return res.status(401).json({ error: "Authentication required." });
-  }
-
-  jwt.verify(token, SECRET_KEY, (err, decoded) => {
-    if (err) {
-      return res.status(401).json({ error: "Invalid token." });
-    }
-    req.user = decoded;
-    next();
-  });
-}
-
-// Use cookie-parser middleware
 Router.use(cookieParser());
 
-// Route to generate affiliate link
 Router.route("/").post(authenticate, async (req, res) => {
   const { productId } = req.body;
   const affiliateId = req.user.id;
@@ -63,7 +43,6 @@ Router.route("/").post(authenticate, async (req, res) => {
   }
 });
 
-// Route to join affiliate program
 Router.route("/affiliated").post(authenticate, async (req, res) => {
   const userId = req.user.id;
 
@@ -85,7 +64,6 @@ Router.route("/affiliated").post(authenticate, async (req, res) => {
   }
 });
 
-// Route to handle affiliate link redirection
 Router.route("/:productId/affiliate/:affiliateId").get(async (req, res) => {
   const { productId, affiliateId } = req.params;
   const hash = req.query.hash;
@@ -114,7 +92,6 @@ Router.route("/:productId/affiliate/:affiliateId").get(async (req, res) => {
   }
 });
 
-// Route to handle purchase
 Router.route("/purchase").post(authenticate, async (req, res) => {
   const { productId, amount } = req.body;
   const userId = req.user.id;
@@ -122,10 +99,16 @@ Router.route("/purchase").post(authenticate, async (req, res) => {
 
   try {
     if (!productId || !amount) {
-      return res.status(400).json({ error: "Product ID and amount are required." });
+      return res
+        .status(400)
+        .json({ error: "Product ID and amount are required." });
     }
 
-    if (!affiliateData || !affiliateData.affiliateId || !affiliateData.productId) {
+    if (
+      !affiliateData ||
+      !affiliateData.affiliateId ||
+      !affiliateData.productId
+    ) {
       return res.status(400).json({ error: "Affiliate data missing." });
     }
 
@@ -138,7 +121,9 @@ Router.route("/purchase").post(authenticate, async (req, res) => {
     ]);
 
     if (!product || !user || !affiliate) {
-      return res.status(404).json({ error: "Product, User, or Affiliate not found." });
+      return res
+        .status(404)
+        .json({ error: "Product, User, or Affiliate not found." });
     }
 
     const purchase = new PurchaseModel({
@@ -156,14 +141,15 @@ Router.route("/purchase").post(authenticate, async (req, res) => {
     });
     await commission.save();
 
-    return res.status(200).json({ message: "Purchase recorded and commission calculated." });
+    return res
+      .status(200)
+      .json({ message: "Purchase recorded and commission calculated." });
   } catch (err) {
     console.error(err);
     return res.status(500).json({ error: err.message });
   }
 });
 
-// Route to handle commissions
 Router.route("/commissions").get(authenticate, async (req, res) => {
   const affiliateId = req.user.id;
 
@@ -181,7 +167,6 @@ Router.route("/commissions").get(authenticate, async (req, res) => {
   }
 });
 
-// Route to get affiliate dashboard
 Router.route("/dashboard").get(authenticate, async (req, res) => {
   const affiliateId = req.user.id;
 
@@ -203,12 +188,7 @@ Router.route("/dashboard").get(authenticate, async (req, res) => {
   }
 });
 
-// Utility Functions
-function generateHash(product, productId, affiliateId) {
-  const dataToHash = `${product.title}-${product.description}-${product.mediaUrl}-${product.mediaType}-${product.link}-${product.category}-${product.commission}-${productId}-${affiliateId}`;
-  const hash = crypto.createHash("sha256").update(dataToHash).digest("hex");
-  return hash;
-}
+// Utility functions
 
 async function findProductByHash(productId, hash) {
   const product = await dataModel.findById(productId);
@@ -225,18 +205,29 @@ async function logAffiliateReferral(affiliateId, productId) {
   try {
     const newReferral = new ReferralModel({ affiliateId, productId });
     await newReferral.save();
-    console.log(`Logged referral for affiliate ${affiliateId} and product ${productId}`);
+    console.log(
+      `Logged referral for affiliate ${affiliateId} and product ${productId}`
+    );
   } catch (err) {
-    console.error(`Error logging referral for affiliate ${affiliateId} and product ${productId}:`, err);
+    console.error(
+      `Error logging referral for affiliate ${affiliateId} and product ${productId}:`,
+      err
+    );
   }
 }
 
 async function getReferralsByAffiliate(affiliateId) {
   try {
-    const referrals = await ReferralModel.find({ affiliateId }).populate("productId", "title");
+    const referrals = await ReferralModel.find({ affiliateId }).populate(
+      "productId",
+      "title"
+    );
     return referrals;
   } catch (err) {
-    console.error(`Error fetching referrals for affiliate ${affiliateId}:`, err);
+    console.error(
+      `Error fetching referrals for affiliate ${affiliateId}:`,
+      err
+    );
     return [];
   }
 }
