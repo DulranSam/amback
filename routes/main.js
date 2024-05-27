@@ -1,9 +1,10 @@
 const express = require("express");
 const Router = express.Router();
 const mainModel = require("../models/mainModel");
+const buyModel = require("../models/purchaseModel");
 const multer = require("multer");
 const cloudinary = require("cloudinary").v2;
-const jwt = require("jsonwebtoken"); // Import jwt module
+const jwt = require("jsonwebtoken");
 require("dotenv").config();
 
 cloudinary.config({
@@ -12,18 +13,18 @@ cloudinary.config({
   api_secret: process.env.cloudinaryapisecret,
 });
 
-const storage = multer.memoryStorage(); // Use memory storage for multer
+const storage = multer.memoryStorage();
 const upload = multer({ storage });
 
 Router.route("/")
   .post(upload.single("media"), async (req, res) => {
     const { title, description, link, category, commission, userId } = req.body;
-    const mediaBuffer = req.file ? req.file.buffer : null; // Use req.file.buffer
+    const mediaBuffer = req.file ? req.file.buffer : null;
     const mediaType = req.file
       ? req.file.mimetype.startsWith("image")
         ? "photo"
         : "video"
-      : null; // Identify media type
+      : null;
 
     if (
       !title ||
@@ -39,14 +40,13 @@ Router.route("/")
     }
 
     try {
-      // Decode the token to get user ID
-      // const token = req.headers.authorization.split(" ")[1];
-      // const decodedToken = jwt.verify(token, process.env.JWT_SECRET); // Use JWT_SECRET from process.env
-      // const userId = decodedToken.userId;
+      const token = req.headers.authorization.split(" ")[1];
+      const decodedToken = jwt.verify(token, process.env.JWT_SECRET);
+      const userId = decodedToken.userId;
 
-      // Upload media (photo or video) to Cloudinary
-      const result = await cloudinary.uploader
-        .upload_stream({ resource_type: "auto" }, async (error, result) => {
+      const uploadStream = cloudinary.uploader.upload_stream(
+        { resource_type: "auto" },
+        async (error, result) => {
           if (error) throw error;
 
           const mediaUrlCloud = result.secure_url;
@@ -57,15 +57,16 @@ Router.route("/")
             link,
             category,
             mediaUrl: mediaUrlCloud,
-            mediaType, // Include media type in the document
+            mediaType,
             commission,
-            productID,
-            // user: userId, // Associate the listing with the user ID
+            user: userId,
           });
 
           return res.status(201).json({ Alert: "Created" });
-        })
-        .end(mediaBuffer);
+        }
+      );
+
+      uploadStream.end(mediaBuffer);
     } catch (err) {
       console.error(err);
       return res.status(500).json({ Error: "Failed to upload media" });
@@ -75,9 +76,8 @@ Router.route("/")
     const selectedType = req.query.type || "all";
 
     try {
-      //there's some bug here
       let data;
-      if (selectedType === "all" || selectedType) {
+      if (selectedType === "all") {
         data = await mainModel.find().sort({ createdAt: -1 });
       } else {
         data = await mainModel
@@ -91,7 +91,6 @@ Router.route("/")
       } else {
         return res.status(404).json({ Alert: "No results found" });
       }
-    
     } catch (err) {
       console.error(err);
       return res.status(500).json({ Error: "Internal server error" });
@@ -101,17 +100,18 @@ Router.route("/")
 Router.route("/:id")
   .put(async (req, res) => {
     const id = req.params.id;
-    const { title, description, mediaUrl, link, category, commission } =
-      req.body;
+    const { title, description, mediaUrl, link, category, commission } = req.body;
 
     if (!id)
       return res.status(400).json({ Alert: "ID is required for update" });
 
     try {
-      // Find the document by ID
       let data = await mainModel.findById(id);
 
-      // Update the document fields with the new values from the request body
+      if (!data) {
+        return res.status(404).json({ Alert: "Item not found" });
+      }
+
       data.title = title;
       data.description = description;
       data.mediaUrl = mediaUrl;
@@ -119,17 +119,14 @@ Router.route("/:id")
       data.category = category;
       data.commission = commission;
 
-      // Save the updated document
       const saved = await data.save();
 
-      // Respond with the updated document
       if (saved) {
         res.status(200).json(data);
       } else {
-        res.status(400).json({ alert: "Error while saving!" });
+        res.status(400).json({ Alert: "Error while saving!" });
       }
     } catch (error) {
-      // Handle any errors that occur during the update process
       console.error("Error updating document:", error);
       res.status(500).json({ Error: "Failed to update document" });
     }
@@ -139,23 +136,39 @@ Router.route("/:id")
 
     if (!id) return res.status(400).json({ Alert: "ID Required" });
 
-    const theItem = await mainModel.findById(id);
-    if (!theItem) {
-      return res.status(404).json({ Alert: "Item doesn't exist!" });
-    } else {
-      return res.status(200).json(theItem);
+    try {
+      const theItem = await mainModel.findById(id);
+      if (!theItem) {
+        return res.status(404).json({ Alert: "Item doesn't exist!" });
+      } else {
+        return res.status(200).json(theItem);
+      }
+    } catch (error) {
+      console.error("Error fetching document:", error);
+      return res.status(500).json({ Error: "Failed to fetch document" });
     }
   });
 
-  Router.route("/buy").post(async(req,res)=>{
-    const {buyItem} = req?.body;
-    await mainModel.aggregate({match:[buyItem]}).then((data)=>{
-      if(data.length && data){
-        return res.status(200).json(data);
-      }else{
-        return res.status(404).json({Alert:"NO results found"})
-      }
-    })
-  });
+Router.route("/buy").post(async (req, res) => {
+  const { buyItem } = req.body;
+
+  if (!buyItem || !buyItem.title) {
+    return res.status(400).json({ Alert: "Buy item details required" });
+  }
+
+  try {
+    const data = await mainModel.findOne({ title: buyItem.title });
+
+    if (data) {
+      await buyModel.create(buyItem);
+      return res.status(200).json({ Alert: `Purchased ${buyItem.title}` });
+    } else {
+      return res.status(404).json({ Alert: "Item not found" });
+    }
+  } catch (err) {
+    console.error("Error purchasing item:", err);
+    return res.status(500).json({ Error: "Failed to purchase item" });
+  }
+});
 
 module.exports = Router;
