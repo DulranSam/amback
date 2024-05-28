@@ -37,7 +37,7 @@ Router.route("/").post(authenticate, async (req, res) => {
     const affiliateLink = `/products/${productId}/affiliate/${affiliateId}?hash=${hash}`;
 
     return res.status(200).json({ affiliateLink });
-  } catch (err) { 
+  } catch (err) {
     console.error(err);
     return res.status(500).json({ error: err.message });
   }
@@ -97,6 +97,8 @@ Router.route("/purchase").post(authenticate, async (req, res) => {
   const userId = req.user.id;
   const affiliateData = req.cookies.affiliate;
 
+  let loyaltyPoints = 0;
+
   try {
     if (!productId || !amount) {
       return res
@@ -131,6 +133,12 @@ Router.route("/purchase").post(authenticate, async (req, res) => {
       userId,
       affiliateId,
       amount,
+    });
+
+    await userModel.findById(userId).then(async (exists) => {
+      if (exists.status === 200 && exists && exists.length) {
+        await exists.updateOne({ loyaltyPoints: (loyaltyPoints += 5) });
+      }
     });
     await purchase.save();
 

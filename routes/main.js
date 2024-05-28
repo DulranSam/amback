@@ -76,14 +76,16 @@ Router.route("/")
     const selectedType = req.query.type || "all";
 
     try {
-      let data;
-      if (selectedType === "all") {
-        data = await mainModel.find().sort({ createdAt: -1 });
-      } else {
-        data = await mainModel
-          .find({ category: selectedType })
-          .sort({ createdAt: -1 });
-      }
+      // let data;
+      // if (selectedType === "all") {
+      //   data = await mainModel.find().sort({ createdAt: -1 });
+      // } else {
+      //   data = await mainModel
+      //     .find({ category: selectedType })
+      //     .sort({ createdAt: -1 });
+      // }
+
+      const data = await mainModel.find().sort({ createdAt: -1 });
 
       if (data.length) {
         console.log(data);
