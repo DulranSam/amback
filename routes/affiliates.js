@@ -97,8 +97,6 @@ Router.route("/purchase").post(authenticate, async (req, res) => {
   const userId = req.user.id;
   const affiliateData = req.cookies.affiliate;
 
-  let loyaltyPoints = 0;
-
   try {
     if (!productId || !amount) {
       return res
@@ -135,11 +133,6 @@ Router.route("/purchase").post(authenticate, async (req, res) => {
       amount,
     });
 
-    await userModel.findById(userId).then(async (exists) => {
-      if (exists.status === 200 && exists && exists.length) {
-        await exists.updateOne({ loyaltyPoints: (loyaltyPoints += 5) });
-      }
-    });
     await purchase.save();
 
     const commissionAmount = calculateCommission(amount, product.commission);
@@ -148,6 +141,8 @@ Router.route("/purchase").post(authenticate, async (req, res) => {
       amount: commissionAmount,
     });
     await commission.save();
+
+    await rankUp(affiliateId);
 
     return res
       .status(200)
@@ -242,6 +237,27 @@ async function getReferralsByAffiliate(affiliateId) {
 
 function calculateCommission(amount, commissionRate) {
   return (amount * commissionRate) / 100;
+}
+
+async function rankUp(affiliateId) {
+  try {
+    const affiliate = await userModel.findById(affiliateId);
+    if (!affiliate) throw new Error("Affiliate not found.");
+
+    const totalPurchases = await PurchaseModel.countDocuments({ affiliateId });
+
+    if (totalPurchases >= 10 && totalPurchases < 20) {
+      affiliate.loyaltyPoints += 10;
+    } else if (totalPurchases >= 20 && totalPurchases < 50) {
+      affiliate.loyaltyPoints += 20;
+    } else if (totalPurchases >= 50) {
+      affiliate.loyaltyPoints += 50;
+    }
+
+    await affiliate.save();
+  } catch (err) {
+    console.error(`Error ranking up affiliate ${affiliateId}:`, err);
+  }
 }
 
 module.exports = Router;

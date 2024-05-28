@@ -10,19 +10,23 @@ const storage = multer.diskStorage({
   },
   filename: (req, file, cb) => {
     cb(null, `${Date.now()}-${file.originalname}`); // Generate a unique filename
-  }
+  },
 });
 
 const upload = multer({ storage });
 
 Router.route("/")
   .post(upload.single("image"), async (req, res) => {
-    const { title, content, userId, tags } = req.body;
+    const { title, content, userId, tags, category } = req.body;
     const image = req.file ? req.file.path : null;
 
     // Input validation
     if (!title || !content || !userId) {
-      return res.status(400).json({ Error: "Title, content, and userId are required" });
+      return res
+        .status(400)
+        .json({ Error: "Title, content, and userId are required" });
+    } else if (!category) {
+      category = "all";
     }
 
     try {
@@ -32,7 +36,7 @@ Router.route("/")
         content,
         userId,
         image,
-        tags: tags ? tags.split(",") : [] // Convert tags string to array
+        tags: tags ? tags.split(",") : [], // Convert tags string to array
       });
 
       // Save the document to the database
@@ -58,5 +62,47 @@ Router.route("/")
       return res.status(500).json({ Error: err.message });
     }
   });
+
+Router.route("/:category").post(async (req, res) => {
+  const category = req.params?.category;
+  if (!category) {
+    return res.status(400).json({ Alert: "No category provided" });
+  }
+
+  try {
+    const data = await socialModel.aggregate([
+      { $match: { category } }, // Assuming 'category' is a field in your documents
+    ]);
+
+    if (data && data.length) {
+      return res.status(200).json(data);
+    } else {
+      return res.status(404).json({ Alert: "No data found" });
+    }
+  } catch (err) {
+    console.error(err);
+    return res.status(500).json({ Error: err.message });
+  }
+});
+
+Router.route("/search").post(async (req, res) => {
+  const { search } = req?.body;
+  if (!search) {
+    return res.status(400).json({ Alert: "No search criteria provided" });
+  }
+
+  try {
+    const data = await socialModel.aggregate([{ $match: search }]);
+
+    if (data && data.length) {
+      return res.status(200).json(data);
+    } else {
+      return res.status(404).json({ Alert: "No data found" });
+    }
+  } catch (err) {
+    console.error(err);
+    return res.status(500).json({ Error: err.message });
+  }
+});
 
 module.exports = Router;

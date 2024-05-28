@@ -16,6 +16,55 @@ cloudinary.config({
 const storage = multer.memoryStorage();
 const upload = multer({ storage });
 
+Router.route("/search").post(async (req, res) => { //needs to be modified in the frontend
+  const { search } = req.body;
+  if (!search)
+    return res.status(400).json({ error: "Search criteria required" });
+
+  // try {
+  //   // Construct aggregation pipeline based on search criteria
+  //   const pipeline = [];
+  //   // Loop through each key-value pair in the search criteria
+  //   Object.entries(search).forEach(([key, value]) => {
+  //     // Add $match stage for each key-value pair
+  //     // Use regex for partial matches and case-insensitive search
+  //     const matchStage = { $match: { [key]: { $regex: `.*${value}.*`, $options: 'i' } } };
+  //     pipeline.push(matchStage);
+  //   });
+
+  //   // Log the constructed pipeline for debugging
+  //   console.log("Constructed Pipeline:", JSON.stringify(pipeline));
+
+  //   // Run the aggregation pipeline
+  //   const data = await mainModel.aggregate(pipeline);
+  //   if (data && data.length) {
+  //     return res.status(200).json(data);
+  //   } else {
+  //     return res.status(404).json({ message: 'No data found' });
+  //   }
+  // } catch (err) {
+  //   console.error(err);
+  //   return res.status(500).json({ error: err.message });
+  // }
+
+  try {
+    const data = await mainModel.aggregate([
+      { $match: { title: { $regex: search, $options: 'i' } } }
+    ]);
+  
+    if (data && data.length) {
+      return res.status(200).json(data);
+    } else {
+      return res.status(404).json({ Alert: "No results found" });
+    }
+  } catch (err) {
+    console.error(err);
+    return res.status(500).json({ error: err.message });
+  }
+  
+  
+});
+
 Router.route("/")
   .post(upload.single("media"), async (req, res) => {
     const { title, description, link, category, commission, userId } = req.body;
@@ -100,7 +149,7 @@ Router.route("/")
   });
 
 Router.route("/:id")
-  .put(async (req, res) => {
+  .put(async (req, res) => { //update item
     const id = req.params.id;
     const { title, description, mediaUrl, link, category, commission } = req.body;
 
