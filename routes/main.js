@@ -137,7 +137,6 @@ Router.route("/")
       const data = await mainModel.find().sort({ createdAt: -1 });
 
       if (data.length) {
-        console.log(data);
         return res.status(200).json(data);
       } else {
         return res.status(404).json({ Alert: "No results found" });
