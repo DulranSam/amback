@@ -1,5 +1,6 @@
 const express = require("express");
 const Router = express.Router();
+const mongoose = require("mongoose");
 const dataModel = require("../models/mainModel");
 const userModel = require("../models/userModel");
 const PurchaseModel = require("../models/purchaseModel");
@@ -39,8 +40,8 @@ Router.route("/").post(authenticate, async (req, res) => {
 
     return res.status(200).json({ affiliateLink });
   } catch (err) {
-    console.error(err);
-    return res.status(500).json({ error: err.message });
+    console.error("Error generating affiliate link:", err);
+    return res.status(500).json({ error: "Internal Server Error." });
   }
 });
 
@@ -60,8 +61,8 @@ Router.route("/affiliated").post(authenticate, async (req, res) => {
 
     return res.status(200).json({ message: "Affiliate status updated." });
   } catch (err) {
-    console.error(err);
-    return res.status(500).json({ error: err.message });
+    console.error("Error updating affiliate status:", err);
+    return res.status(500).json({ error: "Internal Server Error." });
   }
 });
 
@@ -88,43 +89,40 @@ Router.route("/:productId/affiliate/:affiliateId").get(async (req, res) => {
 
     return res.redirect(`/products/${productId}`);
   } catch (err) {
-    console.error(err);
-    return res.status(500).json({ error: err.message });
+    console.error("Error processing affiliate link:", err);
+    return res.status(500).json({ error: "Internal Server Error." });
   }
 });
 
 Router.route("/purchase").post(authenticate, async (req, res) => {
   const { productId, amount } = req.body;
-  const userId = req.user.id;
+  const userId = req.user._id;
   const affiliateData = req.cookies.affiliate;
 
   try {
     if (!productId || !amount) {
-      return res
-        .status(400)
-        .json({ error: "Product ID and amount are required." });
+      return res.status(400).json({ error: "Product ID and amount are required." });
     }
 
-    if (
-      !affiliateData ||
-      !affiliateData.affiliateId ||
-      !affiliateData.productId
-    ) {
+    if (!affiliateData || !affiliateData.affiliateId || !affiliateData.productId) {
       return res.status(400).json({ error: "Affiliate data missing." });
     }
 
     const affiliateId = affiliateData.affiliateId;
 
+    const session = await mongoose.startSession();
+    session.startTransaction();
+
     const [product, user, affiliate] = await Promise.all([
-      dataModel.findById(productId),
-      userModel.findById(userId),
-      userModel.findById(affiliateId),
+      dataModel.findById(productId).session(session),
+      userModel.findById(userId).session(session),
+      userModel.findById(affiliateId).session(session),
     ]);
 
     if (!product || !user || !affiliate) {
-      return res
-        .status(404)
-        .json({ error: "Product, User, or Affiliate not found." });
+      await session.abortTransaction();
+      session.endSession();
+      return res.status(404).json({ error: "Product, User, or Affiliate not found." });
     }
 
     const purchase = new PurchaseModel({
@@ -134,23 +132,24 @@ Router.route("/purchase").post(authenticate, async (req, res) => {
       amount,
     });
 
-    await purchase.save();
+    await purchase.save({ session });
 
     const commissionAmount = calculateCommission(amount, product.commission);
     const commission = new CommissionModel({
       affiliateId,
       amount: commissionAmount,
     });
-    await commission.save();
+    await commission.save({ session });
 
-    await rankUp(affiliateId);
+    await rankUp(affiliateId, session);
 
-    return res
-      .status(200)
-      .json({ message: "Purchase recorded and commission calculated." });
+    await session.commitTransaction();
+    session.endSession();
+
+    return res.status(200).json({ message: "Purchase recorded and commission calculated." });
   } catch (err) {
-    console.error(err);
-    return res.status(500).json({ error: err.message });
+    console.error("Error recording purchase:", err);
+    return res.status(500).json({ error: "Internal Server Error." });
   }
 });
 
@@ -163,12 +162,19 @@ Router.route("/refund").post(authenticate, async (req, res) => {
       return res.status(400).json({ error: "Purchase ID and reason are required." });
     }
 
-    const purchase = await PurchaseModel.findById(purchaseId);
+    const session = await mongoose.startSession();
+    session.startTransaction();
+
+    const purchase = await PurchaseModel.findById(purchaseId).session(session);
     if (!purchase) {
+      await session.abortTransaction();
+      session.endSession();
       return res.status(404).json({ error: "Purchase not found." });
     }
 
     if (purchase.userId.toString() !== userId) {
+      await session.abortTransaction();
+      session.endSession();
       return res.status(403).json({ error: "Unauthorized action." });
     }
 
@@ -178,14 +184,17 @@ Router.route("/refund").post(authenticate, async (req, res) => {
       reason,
     });
 
-    await refund.save();
+    await refund.save({ session });
 
-    await reverseCommission(purchaseId);
+    await reverseCommission(purchaseId, session);
+
+    await session.commitTransaction();
+    session.endSession();
 
     return res.status(200).json({ message: "Refund processed." });
   } catch (err) {
-    console.error(err);
-    return res.status(500).json({ error: err.message });
+    console.error("Error processing refund:", err);
+    return res.status(500).json({ error: "Internal Server Error." });
   }
 });
 
@@ -201,13 +210,13 @@ Router.route("/commissions").get(authenticate, async (req, res) => {
     const totalAmount = commissions.reduce((acc, curr) => acc + curr.amount, 0);
     return res.status(200).json({ totalEarnings: totalAmount });
   } catch (error) {
-    console.error(error);
+    console.error("Error fetching commissions:", error);
     return res.status(500).json({ error: "Internal Server Error." });
   }
 });
 
 Router.route("/dashboard").get(authenticate, async (req, res) => {
-  const affiliateId = req.user.id;
+  const affiliateId = req.user._id;
 
   try {
     const [referrals, purchases, commissions] = await Promise.all([
@@ -222,7 +231,7 @@ Router.route("/dashboard").get(authenticate, async (req, res) => {
       totalEarnings: commissions.reduce((acc, curr) => acc + curr.amount, 0),
     });
   } catch (error) {
-    console.error(error);
+    console.error("Error fetching dashboard data:", error);
     return res.status(500).json({ error: "Internal Server Error." });
   }
 });
@@ -239,7 +248,7 @@ Router.route("/myrank/:id").get(async (req, res) => {
       }
     });
   } catch (err) {
-    console.error(err);
+    console.error("Error fetching user rank:", err);
     return res.status(500).json({ Error: err?.message });
   }
 });
@@ -265,26 +274,7 @@ async function logAffiliateReferral(affiliateId, productId) {
       `Logged referral for affiliate ${affiliateId} and product ${productId}`
     );
   } catch (err) {
-    console.error(
-      `Error logging referral for affiliate ${affiliateId} and product ${productId}:`,
-      err
-    );
-  }
-}
-
-async function getReferralsByAffiliate(affiliateId) {
-  try {
-    const referrals = await ReferralModel.find({ affiliateId }).populate(
-      "productId",
-      "title"
-    );
-    return referrals;
-  } catch (err) {
-    console.error(
-      `Error fetching referrals for affiliate ${affiliateId}:`,
-      err
-    );
-    return [];
+    console.error("Error logging referral:", err);
   }
 }
 
@@ -292,44 +282,53 @@ function calculateCommission(amount, commissionRate) {
   return (amount * commissionRate) / 100;
 }
 
-async function rankUp(affiliateId) {
+async function rankUp(affiliateId, session) {
   try {
-    const affiliate = await userModel.findById(affiliateId);
-    if (!affiliate) throw new Error("Affiliate not found.");
+    const affiliate = await userModel.findById(affiliateId).session(session);
+    const purchases = await PurchaseModel.find({ affiliateId }).session(session);
 
-    const totalPurchases = await PurchaseModel.countDocuments({ affiliateId });
-
-    if (totalPurchases >= 10 && totalPurchases < 20) {
-      affiliate.loyaltyPoints += 10;
-    } else if (totalPurchases >= 20 && totalPurchases < 50) {
-      affiliate.loyaltyPoints += 20;
-    } else if (totalPurchases >= 50) {
-      affiliate.loyaltyPoints += 50;
+    if (purchases.length >= 10) {
+      affiliate.affiliateRank = "Bronze";
+    }
+    if (purchases.length >= 20) {
+      affiliate.affiliateRank = "Silver";
+    }
+    if (purchases.length >= 30) {
+      affiliate.affiliateRank = "Gold";
+    }
+    if (purchases.length >= 40) {
+      affiliate.affiliateRank = "Platinum";
     }
 
-    await affiliate.save();
+    await affiliate.save({ session });
   } catch (err) {
-    console.error(`Error ranking up affiliate ${affiliateId}:`, err);
+    console.error("Error ranking up affiliate:", err);
   }
 }
 
-async function reverseCommission(purchaseId) {
+async function reverseCommission(purchaseId, session) {
   try {
-    const purchase = await PurchaseModel.findById(purchaseId);
+    const purchase = await PurchaseModel.findById(purchaseId).session(session);
     if (!purchase) throw new Error("Purchase not found.");
 
     const commission = await CommissionModel.findOne({
       affiliateId: purchase.affiliateId,
       amount: calculateCommission(purchase.amount, purchase.product.commission),
-    });
+    }).session(session);
+
     if (commission) {
-      await commission.remove();
+      await commission.remove({ session });
     }
 
-    await PurchaseModel.deleteOne({ _id: purchaseId });
+    await PurchaseModel.deleteOne({ _id: purchaseId }).session(session);
   } catch (err) {
     console.error(`Error reversing commission for purchase ${purchaseId}:`, err);
   }
+}
+
+async function getReferralsByAffiliate(affiliateId) {
+  const referrals = await ReferralModel.find({ affiliateId }).populate("productId");
+  return referrals;
 }
 
 module.exports = Router;
