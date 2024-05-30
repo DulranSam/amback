@@ -8,4 +8,4 @@ const purchaseSchema = new mongoose.Schema({
   createdAt: { type: Date, default: Date.now },
 });
 
-module.exports = mongoose.model('Purchase', purchaseSchema);
+module.exports = mongoose.model('purchases', purchaseSchema);

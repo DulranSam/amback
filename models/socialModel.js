@@ -20,4 +20,4 @@ const socialSchema = new mongoose.Schema({
   createdAt: { type: Date, default: Date.now },
 });
 
-module.exports = mongoose.model("Social", socialSchema);
+module.exports = mongoose.model("socials", socialSchema);

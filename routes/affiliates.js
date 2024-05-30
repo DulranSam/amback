@@ -5,6 +5,7 @@ const userModel = require("../models/userModel");
 const PurchaseModel = require("../models/purchaseModel");
 const CommissionModel = require("../models/comissionModel");
 const ReferralModel = require("../models/referralModel");
+const RefundModel = require("../models/refundModel");
 const generateHash = require("../utils/hashUtil");
 const authenticate = require("../utils/authMiddleware");
 const cookieParser = require("cookie-parser");
@@ -153,6 +154,41 @@ Router.route("/purchase").post(authenticate, async (req, res) => {
   }
 });
 
+Router.route("/refund").post(authenticate, async (req, res) => {
+  const { purchaseId, reason } = req.body;
+  const userId = req.user._id;
+
+  try {
+    if (!purchaseId || !reason) {
+      return res.status(400).json({ error: "Purchase ID and reason are required." });
+    }
+
+    const purchase = await PurchaseModel.findById(purchaseId);
+    if (!purchase) {
+      return res.status(404).json({ error: "Purchase not found." });
+    }
+
+    if (purchase.userId.toString() !== userId) {
+      return res.status(403).json({ error: "Unauthorized action." });
+    }
+
+    const refund = new RefundModel({
+      purchaseId,
+      userId,
+      reason,
+    });
+
+    await refund.save();
+
+    await reverseCommission(purchaseId);
+
+    return res.status(200).json({ message: "Refund processed." });
+  } catch (err) {
+    console.error(err);
+    return res.status(500).json({ error: err.message });
+  }
+});
+
 Router.route("/commissions").get(authenticate, async (req, res) => {
   const affiliateId = req.user._id;
 
@@ -188,6 +224,23 @@ Router.route("/dashboard").get(authenticate, async (req, res) => {
   } catch (error) {
     console.error(error);
     return res.status(500).json({ error: "Internal Server Error." });
+  }
+});
+
+Router.route("/myrank/:id").get(async (req, res) => {
+  const id = req.params?.id;
+  if (!id) return res.status(400).json({ Alert: "ID required!" });
+  try {
+    await userModel.findById(id).then(async (userExists) => {
+      if (userExists) {
+        return res.status(200).json({ affiliateRank: userExists?.affiliateRank });
+      } else {
+        return res.status(404).json({ Alert: "User not found!" });
+      }
+    });
+  } catch (err) {
+    console.error(err);
+    return res.status(500).json({ Error: err?.message });
   }
 });
 
@@ -257,6 +310,25 @@ async function rankUp(affiliateId) {
     await affiliate.save();
   } catch (err) {
     console.error(`Error ranking up affiliate ${affiliateId}:`, err);
+  }
+}
+
+async function reverseCommission(purchaseId) {
+  try {
+    const purchase = await PurchaseModel.findById(purchaseId);
+    if (!purchase) throw new Error("Purchase not found.");
+
+    const commission = await CommissionModel.findOne({
+      affiliateId: purchase.affiliateId,
+      amount: calculateCommission(purchase.amount, purchase.product.commission),
+    });
+    if (commission) {
+      await commission.remove();
+    }
+
+    await PurchaseModel.deleteOne({ _id: purchaseId });
+  } catch (err) {
+    console.error(`Error reversing commission for purchase ${purchaseId}:`, err);
   }
 }
 

@@ -6,4 +6,4 @@ const commissionSchema = new mongoose.Schema({
   createdAt: { type: Date, default: Date.now },
 });
 
-module.exports = mongoose.model('Commission', commissionSchema);
+module.exports = mongoose.model('comissions', commissionSchema);

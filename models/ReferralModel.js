@@ -6,4 +6,4 @@ const referralSchema = new mongoose.Schema({
   createdAt: { type: Date, default: Date.now },
 });
 
-module.exports = mongoose.model('Referral', referralSchema);
+module.exports = mongoose.model('referrals', referralSchema);

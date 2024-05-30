@@ -7,4 +7,4 @@ const affiliateSchema = new mongoose.Schema({
   hash: String,
 });
 
-module.exports = mongoose.model("Affiliate", affiliateSchema);
+module.exports = mongoose.model("affiliates", affiliateSchema);

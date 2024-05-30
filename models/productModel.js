@@ -10,4 +10,4 @@ const productSchema = new mongoose.Schema({
   commission: Number,
 });
 
-module.exports = mongoose.model("Product", productSchema);
+module.exports = mongoose.model("products", productSchema);
