@@ -1,15 +1,11 @@
-const mongoose = require("mongoose");
+const mongoose = require('mongoose');
 
 const userSchema = new mongoose.Schema({
-  username: String,
-  email: String,
-  password: String,
+  username: { type: String, required: true, unique: true },
+  password: { type: String, required: true },
+  userType: { type: String, enum: ['user', 'company'], required: true },
   affiliated: { type: Boolean, default: false },
-  affiliateRank:{
-    type:Number,
-    default:0
-  },
-  loyaltyPoints: { type: Number, default: 0 },
+  affiliateRank: { type: String, default: 'None' },
 });
 
-module.exports = mongoose.model("users", userSchema);
+module.exports = mongoose.model('User', userSchema);

@@ -1,38 +1,38 @@
-const mongoose = require('mongoose');
+const mongoose = require("mongoose");
 
 const mainSchema = new mongoose.Schema({
   title: {
     type: String,
-    required: true
+    required: true,
   },
   description: {
     type: String,
-    required: true
+    required: true,
   },
   price: {
     type: Number,
-    required: true
+    required: true,
   },
   mediaUrl: {
     type: String,
-    required: true
+    required: true,
   },
   mediaType: {
     type: String,
-    required: true
+    required: true,
   },
   link: {
     type: String,
-    required: true
+    required: true,
   },
   category: {
     type: String,
-    required: true
+    required: true,
   },
   commission: {
     type: Number,
-    required: true
-  }
+    required: true,
+  },
 });
 
-module.exports = mongoose.model('mains', mainSchema);
+module.exports = mongoose.model("mains", mainSchema);

@@ -1,19 +1,23 @@
 const jwt = require('jsonwebtoken');
-const { SECRET_KEY } = process.env;
+const userModel = require('../models/userModel');
 
-function authenticate(req, res, next) {
-  const token = req.cookies.authToken;
+module.exports = async (req, res, next) => {
+  const token = req.headers['authorization'];
+
   if (!token) {
-    return res.status(401).json({ error: "Authentication required." });
+    return res.status(401).json({ error: 'No token provided.' });
   }
 
-  jwt.verify(token, SECRET_KEY, (err, decoded) => {
-    if (err) {
-      return res.status(401).json({ error: "Invalid token." });
+  try {
+    const decoded = jwt.verify(token, process.env.JWT_SECRET);
+    const user = await userModel.findById(decoded.id);
+    if (!user) {
+      return res.status(404).json({ error: 'User not found.' });
     }
-    req.user = decoded;
-    next();
-  });
-}
 
-module.exports = authenticate;
+    req.user = user;
+    next();
+  } catch (err) {
+    return res.status(500).json({ error: 'Failed to authenticate token.' });
+  }
+};

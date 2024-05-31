@@ -1,11 +1,11 @@
 const mongoose = require('mongoose');
 
 const purchaseSchema = new mongoose.Schema({
-  productId: { type: mongoose.Schema.Types.ObjectId, ref: 'Product' },
-  userId: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
-  affiliateId: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
-  amount: Number,
+  productId: { type: mongoose.Schema.Types.ObjectId, ref: 'Product', required: true },
+  userId: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },
+  affiliateId: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },
+  amount: { type: Number, required: true },
   createdAt: { type: Date, default: Date.now },
 });
 
-module.exports = mongoose.model('purchases', purchaseSchema);
+module.exports = mongoose.model('Purchase', purchaseSchema);
