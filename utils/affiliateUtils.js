@@ -1,18 +1,18 @@
-const crypto = require('crypto');
-const dataModel = require('../models/mainModel');
-const userModel = require('../models/userModel');
-const PurchaseModel = require('../models/purchaseModel');
-const CommissionModel = require('../models/commissionModel');
-const ReferralModel = require('../models/referralModel');
+const crypto = require("crypto");
+const dataModel = require("../models/mainModel");
+const userModel = require("../models/userModel");
+const PurchaseModel = require("../models/purchaseModel");
+const CommissionModel = require("../models/comissionModel");
+const ReferralModel = require("../models/referralModel");
 
 function generateHash(product, productId, affiliateId) {
-  const hash = crypto.createHash('sha256');
+  const hash = crypto.createHash("sha256");
   hash.update(`${product._id}${productId}${affiliateId}`);
-  return hash.digest('hex');
+  return hash.digest("hex");
 }
 
 async function findProductByHash(productId, hash) {
-  const product = await dataModel.findById(productId).populate('companyId');
+  const product = await dataModel.findById(productId).populate("companyId");
   if (product) {
     const generatedHash = generateHash(product, productId, product.companyId);
     if (generatedHash === hash) {
@@ -26,7 +26,9 @@ async function logAffiliateReferral(affiliateId, productId) {
   try {
     const newReferral = new ReferralModel({ affiliateId, productId });
     await newReferral.save();
-    console.log(`Logged referral for affiliate ${affiliateId} and product ${productId}`);
+    console.log(
+      `Logged referral for affiliate ${affiliateId} and product ${productId}`
+    );
   } catch (err) {
     console.error("Error logging referral:", err);
   }
@@ -39,7 +41,9 @@ function calculateCommission(amount, commissionRate) {
 async function rankUp(affiliateId, session) {
   try {
     const affiliate = await userModel.findById(affiliateId).session(session);
-    const purchases = await PurchaseModel.find({ affiliateId }).session(session);
+    const purchases = await PurchaseModel.find({ affiliateId }).session(
+      session
+    );
 
     if (purchases.length >= 10) {
       affiliate.affiliateRank = "Bronze";
@@ -76,12 +80,17 @@ async function reverseCommission(purchaseId, session) {
 
     await PurchaseModel.deleteOne({ _id: purchaseId }).session(session);
   } catch (err) {
-    console.error(`Error reversing commission for purchase ${purchaseId}:`, err);
+    console.error(
+      `Error reversing commission for purchase ${purchaseId}:`,
+      err
+    );
   }
 }
 
 async function getReferralsByAffiliate(affiliateId) {
-  const referrals = await ReferralModel.find({ affiliateId }).populate("productId");
+  const referrals = await ReferralModel.find({ affiliateId }).populate(
+    "productId"
+  );
   return referrals;
 }
 

@@ -4,7 +4,7 @@ const mongoose = require("mongoose");
 const dataModel = require("../models/mainModel");
 const userModel = require("../models/userModel");
 const PurchaseModel = require("../models/purchaseModel");
-const CommissionModel = require("../models/commissionModel");
+const CommissionModel = require("../models/comissionModel");
 const ReferralModel = require("../models/referralModel");
 const RefundModel = require("../models/refundModel");
 const {

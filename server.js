@@ -10,15 +10,15 @@ app.use(cors({ origin: "*" }));
 app.use("/mains", require("./routes/main")); //bugs
 app.use("/users", require("./routes/users")); //done
 app.use("/feedbacks", require("./routes/feedback")); //done
-app.use("/bots",require("./routes/gemini")); //works
-app.use("/affiliates",require("./routes/affiliates"));
-app.use("/socials",require("./routes/socials"));
+app.use("/bots", require("./routes/gemini")); //works
+app.use("/affiliates", require("./routes/affiliates"));
+app.use("/socials", require("./routes/socials"));
+app.use("/contacts", require("./routes/contact"));
 
 app.listen(process.env.PORT, async () => {
   await db();
   console.log(`Servers up on port ${process.env.PORT}`);
 });
-
 
 //Models have ALOT OF THINGS TO BE CHANGED
 //it's taking company from the frontend which is a HUGE problem
