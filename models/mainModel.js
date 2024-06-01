@@ -33,6 +33,11 @@ const mainSchema = new mongoose.Schema({
     type: Number,
     required: true,
   },
-});
+  productType: {
+    type: String,
+    enum: ["physical", "digital"],
+    required: true,
+  },
+}, { timestamps: true });
 
 module.exports = mongoose.model("mains", mainSchema);
