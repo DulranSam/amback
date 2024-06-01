@@ -64,7 +64,7 @@ async function rankUp(affiliateId, session) {
   }
 }
 
-async function reverseCommission(purchaseId, session) {
+async function reverseCommission(purchaseId, session) { //refunds
   try {
     const purchase = await PurchaseModel.findById(purchaseId).session(session);
     if (!purchase) throw new Error("Purchase not found.");

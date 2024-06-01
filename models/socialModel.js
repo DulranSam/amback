@@ -1,11 +1,12 @@
 // models/socialModel.js
 const mongoose = require("mongoose");
 
-const socialSchema = new mongoose.Schema({
+const socialSchema = new mongoose.Schema({ //later
   title: { type: String, required: true },
   content: { type: String, required: true },
-  category:{
-    type:String,default:"general"
+  category: {
+    type: String,
+    default: "general",
   },
   userId: { type: mongoose.Schema.Types.ObjectId, ref: "User", required: true },
   image: { type: String }, // URL or file path to the uploaded image
