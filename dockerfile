@@ -1,4 +1,4 @@
-FROM node:20-alpine
+FROM node:17-alpine
 
 # Set working directory
 WORKDIR /app
@@ -10,7 +10,7 @@ COPY package*.json ./
 RUN npm install
 
 # Copy server.js
-COPY server.js .
+COPY . .
 
 # Change ownership of the app directory
 RUN chown -R node:node /app
