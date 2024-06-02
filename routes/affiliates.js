@@ -26,15 +26,17 @@ Router.route("/").post(authenticate, async (req, res) => {
   const affiliateId = req.user._id;
 
   try {
-    if (req.user.userType !== 'user') {
-      return res.status(403).json({ error: "Only normal users can be affiliated." });
+    if (req.user.userType !== "user") {
+      return res
+        .status(403)
+        .json({ error: "Only normal users can be affiliated." });
     }
 
     if (!productId) {
       return res.status(400).json({ error: "Product ID is required." });
     }
 
-    const product = await dataModel.findById(productId).populate('companyId');
+    const product = await dataModel.findById(productId).populate("companyId");
     if (!product) {
       return res.status(404).json({ error: "Product not found." });
     }
@@ -47,7 +49,9 @@ Router.route("/").post(authenticate, async (req, res) => {
     }
 
     if (product.commission < 5) {
-      return res.status(400).json({ error: "Product commission must be at least 5%." });
+      return res
+        .status(400)
+        .json({ error: "Product commission must be at least 5%." });
     }
 
     const hash = generateHash(product, productId, affiliateId);
@@ -64,8 +68,10 @@ Router.route("/affiliated").post(authenticate, async (req, res) => {
   const userId = req.user._id;
 
   try {
-    if (req.user.userType !== 'user') {
-      return res.status(403).json({ error: "Only normal users can be affiliated." });
+    if (req.user.userType !== "user") {
+      return res
+        .status(403)
+        .json({ error: "Only normal users can be affiliated." });
     }
 
     const user = await userModel.findById(userId);
@@ -119,16 +125,26 @@ Router.route("/purchase").post(authenticate, async (req, res) => {
   const affiliateData = req.cookies.affiliate;
 
   try {
-    if (req.user.userType !== 'user') {
-      return res.status(403).json({ error: "Only normal users can make purchases." });
+    if (req.user.userType !== "user") {
+      return res
+        .status(403)
+        .json({ error: "Only normal users can make purchases." });
     }
 
     if (!productId || !amount) {
-      return res.status(400).json({ error: "Product ID and amount are required." });
+      return res
+        .status(400)
+        .json({ error: "Product ID and amount are required." });
     }
 
-    if (!affiliateData || !affiliateData.affiliateId || !affiliateData.productId) {
-      return res.status(400).json({ error: "Affiliate information is missing." });
+    if (
+      !affiliateData ||
+      !affiliateData.affiliateId ||
+      !affiliateData.productId
+    ) {
+      return res
+        .status(400)
+        .json({ error: "Affiliate information is missing." });
     }
 
     const product = await dataModel.findById(productId);
@@ -206,6 +222,27 @@ Router.route("/refund").post(authenticate, async (req, res) => {
     return res.status(200).json({ message: "Refund processed successfully." });
   } catch (err) {
     console.error("Error processing refund:", err);
+    return res.status(500).json({ error: "Internal Server Error." });
+  }
+});
+
+Router.route("/score").put(async (req, res) => {
+  const { score, user } = req?.body;
+  if (!score || !user)
+    return res.status(400).json({ Alert: "Score required to update" });
+
+  try {
+    const connectedUser = await userModel.findById(user._id);
+    if (!connectedUser) {
+      return res.status(404).json({ Alert: "No user found!" });
+    } else {
+      await connectedUser.updateOne({
+        affiliatePoints: (affiliatePoints += score),
+      });
+      return res.status(200).json({ Alert: "Score updated!" });
+    }
+  } catch (err) {
+    console.error(err);
     return res.status(500).json({ error: "Internal Server Error." });
   }
 });
